@@ -1,0 +1,8 @@
+name = "islamictap-api"
+main = "src/index.js"
+compatibility_date = "2026-10-17"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "islamictap-db"
+database_id = "8c18a0d4-b7e2-4bc4-87ab-bba342df8d5e"
