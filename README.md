@@ -12,9 +12,3 @@ The software is developed by AI and human collaboration, is a work in
 progress, and may contain errors, bugs, or incomplete features.
 
 Use at your own risk.
-
-## Run Locally
-
-```bash
-cd static
-python3 -m http.server 8000
