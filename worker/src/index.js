@@ -82,6 +82,9 @@ export default {
       ).bind(user.id, Date.now()).first();
 
       if (existing) {
+        await env.DB.prepare(
+          "UPDATE users SET username = ? WHERE id = ?"
+        ).bind(user.username || "", user.id).run();
         return json({ token: existing.token, user: { id: user.id, first_name: user.first_name } });
       }
 
@@ -97,6 +100,14 @@ export default {
       ).bind(user.id, user.username || "", user.username || "").run();
 
       return json({ token, user: { id: user.id, first_name: user.first_name } });
+    }
+
+    if (url.pathname === "/api/leaderboard") {
+      const rows = await env.DB.prepare(
+        "SELECT id, username, score FROM users ORDER BY score DESC LIMIT 10"
+      ).all();
+
+      return json({ top: rows.results });
     }
 
     const userId = await getUserFromToken(request, env);
@@ -140,14 +151,6 @@ export default {
       ).bind(userId).first();
 
       return json({ id: userId, score: updated.score, food: updated.food });
-    }
-
-    if (url.pathname === "/api/leaderboard") {
-      const rows = await env.DB.prepare(
-        "SELECT id, username, score FROM users ORDER BY score DESC LIMIT 10"
-      ).all();
-
-      return json({ top: rows.results });
     }
 
     return json({ error: "not found" }, 404);
