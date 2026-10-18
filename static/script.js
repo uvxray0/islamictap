@@ -16,8 +16,10 @@ if (!initData) {
   const avatarEl = document.getElementById("user-avatar");
 
   let token = null;
+  let score = 0;
   let pendingTaps = 0;
   let sending = false;
+  let flushTimer = null;
 
   const displayName = tg.initDataUnsafe.user.first_name || "Player";
   nameEl.textContent = displayName;
@@ -39,7 +41,8 @@ if (!initData) {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
-    scoreEl.textContent = data.score;
+    score = data.score;
+    scoreEl.textContent = score;
   }
 
   async function flushTaps() {
@@ -56,22 +59,29 @@ if (!initData) {
         },
         body: JSON.stringify({ count }),
       });
-      const data = await res.json();
-      scoreEl.textContent = data.score;
+      if (!res.ok) throw new Error("tap failed");
     } catch (e) {
       pendingTaps += count;
+      score -= count;
+      scoreEl.textContent = score;
     } finally {
       sending = false;
     }
   }
 
+  function scheduleFlush() {
+    if (flushTimer) clearTimeout(flushTimer);
+    flushTimer = setTimeout(flushTaps, 5000);
+  }
+
   coinEl.addEventListener("click", () => {
-    scoreEl.textContent = Number(scoreEl.textContent) + 1;
+    score += 1;
+    scoreEl.textContent = score;
     pendingTaps += 1;
     if (navigator.vibrate) navigator.vibrate(8);
+    scheduleFlush();
   });
 
-  setInterval(flushTaps, 5000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flushTaps();
   });
