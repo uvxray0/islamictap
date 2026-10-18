@@ -93,8 +93,8 @@ export default {
       ).bind(token, user.id, expiresAt).run();
 
       await env.DB.prepare(
-        "INSERT INTO users (id) VALUES (?) ON CONFLICT(id) DO NOTHING"
-      ).bind(user.id).run();
+        "INSERT INTO users (id, username) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET username = ?"
+      ).bind(user.id, user.username || "", user.username || "").run();
 
       return json({ token, user: { id: user.id, first_name: user.first_name } });
     }
@@ -104,7 +104,7 @@ export default {
 
     if (url.pathname === "/api/me") {
       const row = await env.DB.prepare(
-        "SELECT id, score, food, last_regen, created_at FROM users WHERE id = ?"
+        "SELECT id, username, score, food, last_regen, created_at FROM users WHERE id = ?"
       ).bind(userId).first();
 
       if (!row) return json({ id: userId, score: 0, food: MAX_FOOD });
@@ -140,6 +140,14 @@ export default {
       ).bind(userId).first();
 
       return json({ id: userId, score: updated.score, food: updated.food });
+    }
+
+    if (url.pathname === "/api/leaderboard") {
+      const rows = await env.DB.prepare(
+        "SELECT id, username, score FROM users ORDER BY score DESC LIMIT 10"
+      ).all();
+
+      return json({ top: rows.results });
     }
 
     return json({ error: "not found" }, 404);

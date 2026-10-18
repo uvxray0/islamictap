@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>islamic tap</title>
+  <title>iactap</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -43,6 +43,24 @@
       <span class="food-text" id="food-text">🍔 500 / 500</span>
     </div>
   </main>
+
+  <nav class="bottombar">
+    <button class="tab active" data-tab="home">
+      <span class="tab-icon">🏠</span>
+      <span class="tab-label" data-i18n="tab_home">خانه</span>
+    </button>
+    <button class="tab" data-tab="stats">
+      <span class="tab-icon">📊</span>
+      <span class="tab-label" data-i18n="tab_stats">آمار</span>
+    </button>
+  </nav>
+
+  <div class="stats-panel" id="stats-panel">
+    <div class="stats-header">
+      <h2 data-i18n="leaderboard_title">🏆 برترین‌ها</h2>
+    </div>
+    <div class="stats-list" id="stats-list"></div>
+  </div>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="script.js"></script>

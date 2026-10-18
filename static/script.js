@@ -10,6 +10,10 @@ const translations = {
       "این پروژه موقتی است، حاوی هیچ ارز واقعی نیست، در مرحله توسعه و تست است، و پایداری لازم را ندارد. ممنون که در آزمایش آن هستید!",
     tips_ok: "باشه",
     score_label: "RIDAN",
+    tab_home: "خانه",
+    tab_stats: "آمار",
+    leaderboard_title: "🏆 برترین‌ها",
+    no_username: "بدون نام",
   },
   en: {
     tips_title: "Attention!",
@@ -17,6 +21,10 @@ const translations = {
       "This project is temporary, contains no real currency, is under development and testing, and has no stability guarantee. Thanks for testing it!",
     tips_ok: "OK",
     score_label: "RIDAN",
+    tab_home: "Home",
+    tab_stats: "Stats",
+    leaderboard_title: "🏆 Leaderboard",
+    no_username: "No name",
   },
 };
 
@@ -66,6 +74,8 @@ if (!initData) {
   const avatarEl = document.getElementById("user-avatar");
   const foodFill = document.getElementById("food-fill");
   const foodText = document.getElementById("food-text");
+  const statsPanel = document.getElementById("stats-panel");
+  const statsList = document.getElementById("stats-list");
 
   let token = null;
   let score = 0;
@@ -112,6 +122,42 @@ if (!initData) {
     food = data.food;
     scoreEl.textContent = score;
     updateFoodUI();
+  }
+
+  async function loadLeaderboard() {
+    const res = await fetch(`${API_URL}/api/leaderboard`);
+    const data = await res.json();
+    renderLeaderboard(data.top);
+  }
+
+  function renderLeaderboard(top) {
+    const lang = getLang();
+    const medals = ["🥇", "🥈", "🥉"];
+    statsList.innerHTML = "";
+
+    top.forEach((user, i) => {
+      const row = document.createElement("div");
+      row.className = "stats-row";
+
+      const rank = document.createElement("div");
+      rank.className = "stats-rank" + (i < 3 ? " medal" : "");
+      rank.textContent = i < 3 ? medals[i] : i + 1;
+
+      const name = document.createElement("div");
+      name.className = "stats-name";
+      name.textContent = user.username
+        ? "@" + user.username
+        : translations[lang].no_username;
+
+      const scoreEl2 = document.createElement("div");
+      scoreEl2.className = "stats-score";
+      scoreEl2.textContent = user.score.toLocaleString();
+
+      row.appendChild(rank);
+      row.appendChild(name);
+      row.appendChild(scoreEl2);
+      statsList.appendChild(row);
+    });
   }
 
   async function flushTaps() {
@@ -170,6 +216,20 @@ if (!initData) {
     if (navigator.vibrate) navigator.vibrate(8);
     startThrottle();
     scheduleDebounce();
+  });
+
+  document.querySelectorAll(".tab").forEach((tab) => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+      tab.classList.add("active");
+      const target = tab.getAttribute("data-tab");
+      if (target === "stats") {
+        statsPanel.classList.add("show");
+        loadLeaderboard();
+      } else {
+        statsPanel.classList.remove("show");
+      }
+    });
   });
 
   document.addEventListener("visibilitychange", () => {
