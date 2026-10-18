@@ -115,6 +115,16 @@ if (!initData) {
     }
   }
 
+  function spawnFloat(x, y) {
+    const el = document.createElement("div");
+    el.className = "float-text";
+    el.textContent = "+1";
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+  }
+
   async function auth() {
     const res = await fetch(`${API_URL}/api/auth`, {
       method: "POST",
@@ -291,13 +301,14 @@ if (!initData) {
     }, 5000);
   }
 
-  coinEl.addEventListener("click", () => {
+  coinEl.addEventListener("click", (e) => {
     if (food < 1) return;
     food -= 1;
     score += 1;
     scoreEl.textContent = score;
     pendingTaps += 1;
     updateFoodUI();
+    spawnFloat(e.clientX, e.clientY);
     if (navigator.vibrate) navigator.vibrate(8);
     startThrottle();
     scheduleDebounce();
