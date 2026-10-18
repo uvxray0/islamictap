@@ -286,12 +286,12 @@ body {
 
 .stats-panel {
   position: fixed;
-  inset: 0;
+  inset: 0 0 80px 0;
   background: var(--bg);
   display: none;
   flex-direction: column;
   z-index: 50;
-  padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  padding: env(safe-area-inset-top) 0 0 0;
 }
 
 .stats-panel.show {
