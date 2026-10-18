@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
   score INTEGER NOT NULL DEFAULT 0,
   food INTEGER NOT NULL DEFAULT 500,
   last_regen INTEGER NOT NULL DEFAULT (unixepoch()),
+  food_capacity_level INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 

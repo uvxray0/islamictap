@@ -4,12 +4,19 @@ const cors = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const MAX_FOOD = 500;
+const BASE_MAX_FOOD = 500;
+const FOOD_PER_LEVEL = 500;
 const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
+const FOOD_PRICE = 2000;
+const FOOD_MAX_LEVEL = 3;
 
 function json(data, status = 200) {
   return Response.json(data, { status, headers: cors });
+}
+
+function getMaxFood(level) {
+  return BASE_MAX_FOOD + level * FOOD_PER_LEVEL;
 }
 
 async function verifyInitData(initData, botToken) {
@@ -56,11 +63,11 @@ async function getUserFromToken(request, env) {
   return row ? row.user_id : null;
 }
 
-function calcFood(currentFood, lastRegen) {
+function calcFood(currentFood, lastRegen, maxFood) {
   const now = Math.floor(Date.now() / 1000);
   const elapsed = now - lastRegen;
   const regen = Math.floor((elapsed * FOOD_REGEN) / (FOOD_REGEN_INTERVAL / 1000));
-  const newFood = Math.min(currentFood + regen, MAX_FOOD);
+  const newFood = Math.min(currentFood + regen, maxFood);
   return { food: newFood, lastRegen: now };
 }
 
@@ -115,13 +122,14 @@ export default {
 
     if (url.pathname === "/api/me") {
       const row = await env.DB.prepare(
-        "SELECT id, username, score, food, last_regen, created_at FROM users WHERE id = ?"
+        "SELECT id, username, score, food, last_regen, food_capacity_level, created_at FROM users WHERE id = ?"
       ).bind(userId).first();
 
-      if (!row) return json({ id: userId, score: 0, food: MAX_FOOD });
+      if (!row) return json({ id: userId, score: 0, food: BASE_MAX_FOOD, max_food: BASE_MAX_FOOD });
 
-      const { food } = calcFood(row.food, row.last_regen);
-      return json({ ...row, food });
+      const maxFood = getMaxFood(row.food_capacity_level);
+      const { food } = calcFood(row.food, row.last_regen, maxFood);
+      return json({ ...row, food, max_food: maxFood });
     }
 
     if (url.pathname === "/api/tap" && request.method === "POST") {
@@ -129,15 +137,16 @@ export default {
       const count = Math.min(Math.max(Number(body.count) || 1, 1), 1000);
 
       const row = await env.DB.prepare(
-        "SELECT food, last_regen FROM users WHERE id = ?"
+        "SELECT food, last_regen, food_capacity_level FROM users WHERE id = ?"
       ).bind(userId).first();
 
+      const maxFood = getMaxFood(row.food_capacity_level);
       const now = Math.floor(Date.now() / 1000);
-      const { food } = calcFood(row.food, row.last_regen);
+      const { food } = calcFood(row.food, row.last_regen, maxFood);
       const actualCount = Math.min(count, food);
 
       if (actualCount <= 0) {
-        return json({ error: "no food", food: 0 });
+        return json({ error: "no food", food: 0, max_food: maxFood });
       }
 
       const newFood = food - actualCount;
@@ -150,7 +159,60 @@ export default {
         "SELECT score, food FROM users WHERE id = ?"
       ).bind(userId).first();
 
-      return json({ id: userId, score: updated.score, food: updated.food });
+      return json({ id: userId, score: updated.score, food: updated.food, max_food: maxFood });
+    }
+
+    if (url.pathname === "/api/shop") {
+      const row = await env.DB.prepare(
+        "SELECT food_capacity_level FROM users WHERE id = ?"
+      ).bind(userId).first();
+
+      return json({
+        upgrades: [
+          {
+            id: "food_capacity",
+            level: row.food_capacity_level,
+            price: FOOD_PRICE,
+            current: getMaxFood(row.food_capacity_level),
+            next: getMaxFood(row.food_capacity_level + 1),
+            max_level: FOOD_MAX_LEVEL,
+          },
+        ],
+      });
+    }
+
+    if (url.pathname === "/api/buy" && request.method === "POST") {
+      const body = await request.json().catch(() => ({}));
+      if (body.upgrade_id !== "food_capacity") {
+        return json({ error: "invalid upgrade" }, 400);
+      }
+
+      const row = await env.DB.prepare(
+        "SELECT score, food_capacity_level FROM users WHERE id = ?"
+      ).bind(userId).first();
+
+      if (row.score < FOOD_PRICE) {
+        return json({ error: "not enough score" }, 400);
+      }
+
+      if (row.food_capacity_level >= FOOD_MAX_LEVEL) {
+        return json({ error: "max level" }, 400);
+      }
+
+      await env.DB.prepare(
+        "UPDATE users SET score = score - ?, food_capacity_level = food_capacity_level + 1 WHERE id = ?"
+      ).bind(FOOD_PRICE, userId).run();
+
+      const updated = await env.DB.prepare(
+        "SELECT score, food_capacity_level FROM users WHERE id = ?"
+      ).bind(userId).first();
+
+      return json({
+        ok: true,
+        score: updated.score,
+        food_capacity_level: updated.food_capacity_level,
+        max_food: getMaxFood(updated.food_capacity_level),
+      });
     }
 
     return json({ error: "not found" }, 404);

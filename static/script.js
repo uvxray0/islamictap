@@ -1,5 +1,4 @@
 const API_URL = "https://islamictap-api.xraygate.workers.dev";
-const MAX_FOOD = 500;
 const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
@@ -11,9 +10,14 @@ const translations = {
     tips_ok: "باشه",
     score_label: "RIDAN",
     tab_home: "خانه",
+    tab_shop: "شاپ",
     tab_stats: "آمار",
     leaderboard_title: "🏆 برترین‌ها",
+    shop_title: "🛒 شاپ",
     no_username: "بدون نام",
+    food_storage: "انبار غذا",
+    buy: "خرید",
+    max_level: "حداکثر",
   },
   en: {
     tips_title: "Attention!",
@@ -22,9 +26,14 @@ const translations = {
     tips_ok: "OK",
     score_label: "RIDAN",
     tab_home: "Home",
+    tab_shop: "Shop",
     tab_stats: "Stats",
     leaderboard_title: "🏆 Leaderboard",
+    shop_title: "🛒 Shop",
     no_username: "No name",
+    food_storage: "Food Storage",
+    buy: "Buy",
+    max_level: "MAX",
   },
 };
 
@@ -76,28 +85,32 @@ if (!initData) {
   const foodText = document.getElementById("food-text");
   const statsPanel = document.getElementById("stats-panel");
   const statsList = document.getElementById("stats-list");
+  const shopPanel = document.getElementById("shop-panel");
+  const shopList = document.getElementById("shop-list");
 
   let token = null;
   let score = 0;
-  let food = MAX_FOOD;
+  let food = 500;
+  let maxFood = 500;
   let pendingTaps = 0;
   let sending = false;
   let debounceTimer = null;
   let throttleTimer = null;
+  let leaderboardData = null;
 
   const displayName = tg.initDataUnsafe.user.first_name || "Player";
   nameEl.textContent = displayName;
   avatarEl.textContent = displayName[0].toUpperCase();
 
   function updateFoodUI() {
-    const pct = (food / MAX_FOOD) * 100;
+    const pct = (food / maxFood) * 100;
     foodFill.style.width = `${pct}%`;
-    foodText.textContent = `🍔 ${Math.floor(food)} / ${MAX_FOOD}`;
+    foodText.textContent = `🍔 ${Math.floor(food)} / ${maxFood}`;
   }
 
   function regenFood() {
-    if (food < MAX_FOOD) {
-      food = Math.min(food + FOOD_REGEN, MAX_FOOD);
+    if (food < maxFood) {
+      food = Math.min(food + FOOD_REGEN, maxFood);
       updateFoodUI();
     }
   }
@@ -120,6 +133,7 @@ if (!initData) {
     const data = await res.json();
     score = data.score;
     food = data.food;
+    maxFood = data.max_food;
     scoreEl.textContent = score;
     updateFoodUI();
   }
@@ -127,7 +141,8 @@ if (!initData) {
   async function loadLeaderboard() {
     const res = await fetch(`${API_URL}/api/leaderboard`);
     const data = await res.json();
-    renderLeaderboard(data.top);
+    leaderboardData = data.top;
+    renderLeaderboard(leaderboardData);
   }
 
   function renderLeaderboard(top) {
@@ -158,6 +173,76 @@ if (!initData) {
       row.appendChild(scoreEl2);
       statsList.appendChild(row);
     });
+  }
+
+  async function loadShop() {
+    const res = await fetch(`${API_URL}/api/shop`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    renderShop(data.upgrades);
+  }
+
+  function renderShop(upgrades) {
+    const lang = getLang();
+    shopList.innerHTML = "";
+
+    upgrades.forEach((up) => {
+      const card = document.createElement("div");
+      card.className = "shop-card";
+
+      const icon = document.createElement("div");
+      icon.className = "shop-card-icon";
+      icon.textContent = "🍔";
+
+      const info = document.createElement("div");
+      info.className = "shop-card-info";
+
+      const title = document.createElement("div");
+      title.className = "shop-card-title";
+      title.textContent = `${translations[lang].food_storage} (Lv ${up.level})`;
+
+      const desc = document.createElement("div");
+      desc.className = "shop-card-desc";
+      desc.textContent = `${up.current} → ${up.next}`;
+
+      info.appendChild(title);
+      info.appendChild(desc);
+
+      const btn = document.createElement("button");
+      btn.className = "shop-card-btn";
+      if (up.level >= up.max_level) {
+        btn.textContent = translations[lang].max_level;
+        btn.disabled = true;
+      } else {
+        btn.textContent = `${translations[lang].buy} ${up.price}`;
+        btn.addEventListener("click", () => buyUpgrade(up.id));
+      }
+
+      card.appendChild(icon);
+      card.appendChild(info);
+      card.appendChild(btn);
+      shopList.appendChild(card);
+    });
+  }
+
+  async function buyUpgrade(upgradeId) {
+    const res = await fetch(`${API_URL}/api/buy`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ upgrade_id: upgradeId }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      score = data.score;
+      maxFood = data.max_food;
+      scoreEl.textContent = score;
+      updateFoodUI();
+      await loadShop();
+    }
   }
 
   async function flushTaps() {
@@ -223,11 +308,14 @@ if (!initData) {
       document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
       tab.classList.add("active");
       const target = tab.getAttribute("data-tab");
+      statsPanel.classList.remove("show");
+      shopPanel.classList.remove("show");
       if (target === "stats") {
         statsPanel.classList.add("show");
-        loadLeaderboard();
-      } else {
-        statsPanel.classList.remove("show");
+        renderLeaderboard(leaderboardData || []);
+      } else if (target === "shop") {
+        shopPanel.classList.add("show");
+        loadShop();
       }
     });
   });
@@ -249,6 +337,7 @@ if (!initData) {
     try {
       await auth();
       await loadState();
+      await loadLeaderboard();
     } catch (e) {
       scoreEl.textContent = "?";
     }
