@@ -1,6 +1,8 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY,
   score INTEGER NOT NULL DEFAULT 0,
+  food INTEGER NOT NULL DEFAULT 500,
+  last_regen INTEGER NOT NULL DEFAULT (unixepoch()),
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 

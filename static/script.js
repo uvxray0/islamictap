@@ -56,13 +56,15 @@ if (!initData) {
     token = data.token;
   }
 
-  async function loadScore() {
+  async function loadState() {
     const res = await fetch(`${API_URL}/api/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
     score = data.score;
+    food = data.food;
     scoreEl.textContent = score;
+    updateFoodUI();
   }
 
   async function flushTaps() {
@@ -83,7 +85,9 @@ if (!initData) {
     } catch (e) {
       pendingTaps += count;
       score -= count;
+      food += count;
       scoreEl.textContent = score;
+      updateFoodUI();
     } finally {
       sending = false;
     }
@@ -137,8 +141,7 @@ if (!initData) {
   (async () => {
     try {
       await auth();
-      await loadScore();
-      updateFoodUI();
+      await loadState();
     } catch (e) {
       scoreEl.textContent = "?";
     }
