@@ -1,6 +1,6 @@
 const API_URL = "https://islamictap-api.xraygate.workers.dev";
 const MAX_FOOD = 500;
-const FOOD_REGEN = 3;
+const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
 const tg = window.Telegram?.WebApp;

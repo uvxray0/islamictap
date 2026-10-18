@@ -5,7 +5,7 @@ const cors = {
 };
 
 const MAX_FOOD = 500;
-const FOOD_REGEN = 3;
+const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
 function json(data, status = 200) {
@@ -77,6 +77,14 @@ export default {
       await env.DB.prepare("DELETE FROM sessions WHERE expires_at < ?")
         .bind(Date.now()).run();
 
+      const existing = await env.DB.prepare(
+        "SELECT token FROM sessions WHERE user_id = ? AND expires_at > ? ORDER BY expires_at DESC LIMIT 1"
+      ).bind(user.id, Date.now()).first();
+
+      if (existing) {
+        return json({ token: existing.token, user: { id: user.id, first_name: user.first_name } });
+      }
+
       const token = crypto.randomUUID();
       const expiresAt = Date.now() + 1000 * 60 * 60 * 72;
 
@@ -124,7 +132,7 @@ export default {
       const newFood = food - actualCount;
 
       await env.DB.prepare(
-        `UPDATE users SET score = score + ?, food = ?, last_regen = ? WHERE id = ?`
+        "UPDATE users SET score = score + ?, food = ?, last_regen = ? WHERE id = ?"
       ).bind(actualCount, newFood, now, userId).run();
 
       const updated = await env.DB.prepare(
