@@ -1,4 +1,7 @@
 const API_URL = "https://islamictap-api.xraygate.workers.dev";
+const MAX_FOOD = 500;
+const FOOD_REGEN = 3;
+const FOOD_REGEN_INTERVAL = 1000;
 
 const tg = window.Telegram?.WebApp;
 const initData = tg?.initData || "";
@@ -14,16 +17,33 @@ if (!initData) {
   const scoreEl = document.getElementById("score");
   const nameEl = document.getElementById("user-name");
   const avatarEl = document.getElementById("user-avatar");
+  const foodFill = document.getElementById("food-fill");
+  const foodText = document.getElementById("food-text");
 
   let token = null;
   let score = 0;
+  let food = MAX_FOOD;
   let pendingTaps = 0;
   let sending = false;
-  let flushTimer = null;
+  let debounceTimer = null;
+  let throttleTimer = null;
 
   const displayName = tg.initDataUnsafe.user.first_name || "Player";
   nameEl.textContent = displayName;
   avatarEl.textContent = displayName[0].toUpperCase();
+
+  function updateFoodUI() {
+    const pct = (food / MAX_FOOD) * 100;
+    foodFill.style.width = `${pct}%`;
+    foodText.textContent = `🍔 ${Math.floor(food)} / ${MAX_FOOD}`;
+  }
+
+  function regenFood() {
+    if (food < MAX_FOOD) {
+      food = Math.min(food + FOOD_REGEN, MAX_FOOD);
+      updateFoodUI();
+    }
+  }
 
   async function auth() {
     const res = await fetch(`${API_URL}/api/auth`, {
@@ -69,28 +89,56 @@ if (!initData) {
     }
   }
 
-  function scheduleFlush() {
-    if (flushTimer) clearTimeout(flushTimer);
-    flushTimer = setTimeout(flushTaps, 5000);
+  function startThrottle() {
+    if (throttleTimer) return;
+    throttleTimer = setInterval(flushTaps, 5000);
+  }
+
+  function stopThrottle() {
+    if (throttleTimer) {
+      clearInterval(throttleTimer);
+      throttleTimer = null;
+    }
+  }
+
+  function scheduleDebounce() {
+    if (debounceTimer) clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      flushTaps();
+      stopThrottle();
+    }, 5000);
   }
 
   coinEl.addEventListener("click", () => {
+    if (food < 1) return;
+    food -= 1;
     score += 1;
     scoreEl.textContent = score;
     pendingTaps += 1;
+    updateFoodUI();
     if (navigator.vibrate) navigator.vibrate(8);
-    scheduleFlush();
+    startThrottle();
+    scheduleDebounce();
   });
 
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") flushTaps();
+    if (document.visibilityState === "hidden") {
+      flushTaps();
+      stopThrottle();
+    }
   });
-  window.addEventListener("pagehide", flushTaps);
+  window.addEventListener("pagehide", () => {
+    flushTaps();
+    stopThrottle();
+  });
+
+  setInterval(regenFood, FOOD_REGEN_INTERVAL);
 
   (async () => {
     try {
       await auth();
       await loadScore();
+      updateFoodUI();
     } catch (e) {
       scoreEl.textContent = "?";
     }
