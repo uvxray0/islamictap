@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
@@ -7,17 +7,29 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <div class="tips-overlay" id="tips-overlay">
+    <div class="tips-modal">
+      <div class="tips-icon">⚠️</div>
+      <h2 data-i18n="tips_title">توجه!</h2>
+      <p data-i18n="tips_text">
+        این پروژه موقتی است، حاوی هیچ ارز واقعی نیست، در مرحله توسعه و تست است، و پایداری لازم را ندارد. ممنون که در آزمایش آن هستید!
+      </p>
+      <button class="tips-button" id="tips-ok" data-i18n="tips_ok">باشه</button>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="user-badge">
       <span class="user-avatar" id="user-avatar">?</span>
       <span class="user-name" id="user-name">Guest</span>
     </div>
+    <button class="lang-switch" id="lang-switch">EN</button>
   </header>
 
   <main class="stage">
     <div class="score">
       <span class="score-value" id="score">0</span>
-      <span class="score-label">RIDAN</span>
+      <span class="score-label" data-i18n="score_label">RIDAN</span>
     </div>
 
     <button class="coin" id="coin" aria-label="tap">

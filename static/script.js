@@ -3,6 +3,53 @@ const MAX_FOOD = 500;
 const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
+const translations = {
+  fa: {
+    tips_title: "توجه!",
+    tips_text:
+      "این پروژه موقتی است، حاوی هیچ ارز واقعی نیست، در مرحله توسعه و تست است، و پایداری لازم را ندارد. ممنون که در آزمایش آن هستید!",
+    tips_ok: "باشه",
+    score_label: "RIDAN",
+  },
+  en: {
+    tips_title: "Attention!",
+    tips_text:
+      "This project is temporary, contains no real currency, is under development and testing, and has no stability guarantee. Thanks for testing it!",
+    tips_ok: "OK",
+    score_label: "RIDAN",
+  },
+};
+
+function getLang() {
+  return localStorage.getItem("lang") || "fa";
+}
+
+function setLang(lang) {
+  localStorage.setItem("lang", lang);
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "fa" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (translations[lang][key]) el.textContent = translations[lang][key];
+  });
+  document.getElementById("lang-switch").textContent = lang === "fa" ? "EN" : "فا";
+}
+
+document.getElementById("lang-switch").addEventListener("click", () => {
+  setLang(getLang() === "fa" ? "en" : "fa");
+});
+
+const tipsOverlay = document.getElementById("tips-overlay");
+if (!localStorage.getItem("tips_seen")) {
+  tipsOverlay.classList.add("show");
+}
+document.getElementById("tips-ok").addEventListener("click", () => {
+  localStorage.setItem("tips_seen", "1");
+  tipsOverlay.classList.remove("show");
+});
+
+setLang(getLang());
+
 const tg = window.Telegram?.WebApp;
 const initData = tg?.initData || "";
 
