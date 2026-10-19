@@ -4,7 +4,7 @@ const cors = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-const FOOD_SPACES = [500, 1000, 2000, 3000, 4000, 5000];
+const FOOD_SPACES = [500, 1000, 2000, 4000, 6000, 8000];
 const FOOD_PRICES = [2000, 4000, 6000, 8000, 10000];
 const FOOD_MAX_LEVEL = 5;
 const FOOD_REGEN = 2;

@@ -3,8 +3,8 @@ const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
 const VILLAINS = [
-  { id: "villain_1", name: "شیطان 1", nameEn: "Devil 1", price: 30000, image: "assets/characters/villain_1.png" },
-  { id: "villain_2", name: "شیطان 2", nameEn: "Devil 2", price: 15000, image: "assets/characters/villain_2.png" },
+  { id: "villain_1", name: "شیطان 1", nameEn: "Devil 1", price: 30000, image: "assets/characters/villain_1.jpg" },
+  { id: "villain_2", name: "شیطان 2", nameEn: "Devil 2", price: 15000, image: "assets/characters/villain_2.jpg" },
 ];
 
 const translations = {
@@ -15,10 +15,10 @@ const translations = {
     tips_ok: "باشه",
     score_label: "RIDAN",
     tab_home: "خانه",
-    tab_shop: "شاپ",
+    tab_shop: "فروشگاه",
     tab_stats: "آمار",
     leaderboard_title: "🏆 برترین‌ها",
-    shop_title: "🛒 شاپ",
+    shop_title: "🛒 فروشگاه",
     shop_upgrades_title: "⬆️ ارتقاها",
     shop_chars_title: "👹 شخصیت ها",
     no_username: "بدون نام",
