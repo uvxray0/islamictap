@@ -1,9 +1,16 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY,
+  username TEXT DEFAULT '',
   score INTEGER NOT NULL DEFAULT 0,
   food INTEGER NOT NULL DEFAULT 500,
   last_regen INTEGER NOT NULL DEFAULT (unixepoch()),
   food_capacity_level INTEGER NOT NULL DEFAULT 0,
+  gems INTEGER NOT NULL DEFAULT 0,
+  referral_count INTEGER NOT NULL DEFAULT 0,
+  referred_by INTEGER DEFAULT NULL,
+  hero1_level INTEGER NOT NULL DEFAULT 0,
+  hero2_level INTEGER NOT NULL DEFAULT 0,
+  active_hero INTEGER DEFAULT NULL,
   created_at INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
@@ -13,6 +20,15 @@ CREATE TABLE IF NOT EXISTS sessions (
   expires_at INTEGER NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS referrals (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  referrer_id INTEGER NOT NULL,
+  referred_id INTEGER NOT NULL UNIQUE,
+  gems_awarded INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+
 CREATE INDEX IF NOT EXISTS idx_users_score ON users(score DESC);
 CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);

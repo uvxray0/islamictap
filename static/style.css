@@ -535,3 +535,133 @@ body {
     opacity: 0;
   }
 }
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gems-badge {
+  background: var(--pill);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.hero-flag {
+  font-size: 16px;
+  margin-left: 4px;
+}
+
+.referral-panel {
+  position: fixed;
+  inset: 0 0 80px 0;
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+  z-index: 50;
+  padding: env(safe-area-inset-top) 0 0 0;
+}
+
+.referral-panel.show {
+  display: flex;
+}
+
+.referral-header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.referral-header h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.referral-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.referral-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.referral-stat {
+  background: var(--pill);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.referral-stat-label {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.referral-stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.referral-link-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.referral-link-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+.referral-link-box {
+  display: flex;
+  gap: 8px;
+}
+
+.referral-link-box input {
+  flex: 1;
+  background: var(--pill);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.referral-link-box button {
+  background: var(--brown);
+  border: none;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.referral-link-box button:active {
+  background: var(--brown-deep);
+}
