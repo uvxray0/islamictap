@@ -2,6 +2,11 @@ const API_URL = "https://islamictap-api.xraygate.workers.dev";
 const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
+const VILLAINS = [
+  { id: "villain_1", name: "شیطان 1", nameEn: "Devil 1", price: 30000, image: "assets/characters/villain_1.png" },
+  { id: "villain_2", name: "شیطان 2", nameEn: "Devil 2", price: 15000, image: "assets/characters/villain_2.png" },
+];
+
 const translations = {
   fa: {
     tips_title: "توجه!",
@@ -14,10 +19,16 @@ const translations = {
     tab_stats: "آمار",
     leaderboard_title: "🏆 برترین‌ها",
     shop_title: "🛒 شاپ",
+    shop_upgrades_title: "⬆️ ارتقاها",
+    shop_chars_title: "👹 شخصیت ها",
     no_username: "بدون نام",
     food_storage: "انبار غذا",
     buy: "خرید",
     max_level: "حداکثر",
+    toast_no_score: "موجودی کافی نیست",
+    toast_max_level: "به حداکثر سطح رسیدی",
+    toast_buy_success: "خرید موفق!",
+    toast_coming_soon: "به‌زودی!",
   },
   en: {
     tips_title: "Attention!",
@@ -30,10 +41,16 @@ const translations = {
     tab_stats: "Stats",
     leaderboard_title: "🏆 Leaderboard",
     shop_title: "🛒 Shop",
+    shop_upgrades_title: "⬆️ Upgrades",
+    shop_chars_title: "👹 Characters",
     no_username: "No name",
     food_storage: "Food Storage",
     buy: "Buy",
     max_level: "MAX",
+    toast_no_score: "Not enough score",
+    toast_max_level: "Max level reached",
+    toast_buy_success: "Purchased!",
+    toast_coming_soon: "Coming soon!",
   },
 };
 
@@ -67,6 +84,22 @@ document.getElementById("tips-ok").addEventListener("click", () => {
 
 setLang(getLang());
 
+const toastEl = document.getElementById("toast");
+let toastTimer = null;
+
+function showToast(message, type) {
+  toastEl.textContent = "";
+  const icon = document.createElement("span");
+  icon.textContent = type === "success" ? "✓" : "✕";
+  toastEl.appendChild(icon);
+  toastEl.appendChild(document.createTextNode(" " + message));
+  toastEl.className = `toast ${type} show`;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    toastEl.classList.remove("show");
+  }, 2500);
+}
+
 const tg = window.Telegram?.WebApp;
 const initData = tg?.initData || "";
 
@@ -86,7 +119,8 @@ if (!initData) {
   const statsPanel = document.getElementById("stats-panel");
   const statsList = document.getElementById("stats-list");
   const shopPanel = document.getElementById("shop-panel");
-  const shopList = document.getElementById("shop-list");
+  const shopUpgrades = document.getElementById("shop-upgrades");
+  const shopGrid = document.getElementById("shop-grid");
 
   let token = null;
   let score = 0;
@@ -190,12 +224,13 @@ if (!initData) {
       headers: { Authorization: `Bearer ${token}` },
     });
     const data = await res.json();
-    renderShop(data.upgrades);
+    renderUpgrades(data.upgrades);
+    renderVillains();
   }
 
-  function renderShop(upgrades) {
+  function renderUpgrades(upgrades) {
     const lang = getLang();
-    shopList.innerHTML = "";
+    shopUpgrades.innerHTML = "";
 
     upgrades.forEach((up) => {
       const card = document.createElement("div");
@@ -232,11 +267,39 @@ if (!initData) {
       card.appendChild(icon);
       card.appendChild(info);
       card.appendChild(btn);
-      shopList.appendChild(card);
+      shopUpgrades.appendChild(card);
+    });
+  }
+
+  function renderVillains() {
+    const lang = getLang();
+    shopGrid.innerHTML = "";
+
+    VILLAINS.forEach((v) => {
+      const card = document.createElement("div");
+      card.className = "char-card";
+
+      const img = document.createElement("img");
+      img.className = "char-card-img";
+      img.src = v.image;
+      img.alt = lang === "fa" ? v.name : v.nameEn;
+      img.loading = "lazy";
+
+      const name = document.createElement("div");
+      name.className = "char-card-name";
+      name.textContent = `${lang === "fa" ? v.name : v.nameEn} · ${v.price.toLocaleString()}`;
+
+      card.appendChild(img);
+      card.appendChild(name);
+      card.addEventListener("click", () => {
+        showToast(translations[lang].toast_coming_soon, "error");
+      });
+      shopGrid.appendChild(card);
     });
   }
 
   async function buyUpgrade(upgradeId) {
+    const lang = getLang();
     const res = await fetch(`${API_URL}/api/buy`, {
       method: "POST",
       headers: {
@@ -246,13 +309,24 @@ if (!initData) {
       body: JSON.stringify({ upgrade_id: upgradeId }),
     });
     const data = await res.json();
-    if (data.ok) {
-      score = data.score;
-      maxFood = data.max_food;
-      scoreEl.textContent = score;
-      updateFoodUI();
-      await loadShop();
+
+    if (!data.ok) {
+      if (data.error === "max level") {
+        showToast(translations[lang].toast_max_level, "error");
+      } else if (data.error === "not enough score") {
+        showToast(translations[lang].toast_no_score, "error");
+      } else {
+        showToast(data.error || "Error", "error");
+      }
+      return;
     }
+
+    score = data.score;
+    maxFood = data.max_food;
+    scoreEl.textContent = score;
+    updateFoodUI();
+    showToast(translations[lang].toast_buy_success, "success");
+    await loadShop();
   }
 
   async function flushTaps() {

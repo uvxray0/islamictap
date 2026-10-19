@@ -18,6 +18,8 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <header class="topbar">
     <div class="user-badge">
       <span class="user-avatar" id="user-avatar">?</span>
@@ -51,7 +53,7 @@
     </button>
     <button class="tab" data-tab="shop">
       <span class="tab-icon">🛒</span>
-      <span class="tab-label" data-i18n="tab_shop">فروشگاه</span>
+      <span class="tab-label" data-i18n="tab_shop">شاپ</span>
     </button>
     <button class="tab" data-tab="stats">
       <span class="tab-icon">📊</span>
@@ -61,9 +63,18 @@
 
   <div class="shop-panel" id="shop-panel">
     <div class="shop-header">
-      <h2 data-i18n="shop_title">🛒 فروشگاه</h2>
+      <h2 data-i18n="shop_title">🛒 شاپ</h2>
     </div>
-    <div class="shop-list" id="shop-list"></div>
+    <div class="shop-body">
+      <div class="shop-section">
+        <h3 class="shop-section-title" data-i18n="shop_upgrades_title">⬆️ ارتقاها</h3>
+        <div class="shop-upgrades" id="shop-upgrades"></div>
+      </div>
+      <div class="shop-section">
+        <h3 class="shop-section-title" data-i18n="shop_chars_title">👹 شخصیت‌های اصلی</h3>
+        <div class="shop-grid" id="shop-grid"></div>
+      </div>
+    </div>
   </div>
 
   <div class="stats-panel" id="stats-panel">
