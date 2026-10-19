@@ -5,6 +5,8 @@ const FOOD_REGEN_INTERVAL = 1000;
 const VILLAINS = [
   { id: "villain_1", name: "شیطان 1", nameEn: "Devil 1", price: 30000, image: "assets/characters/villain_1.jpg" },
   { id: "villain_2", name: "شیطان 2", nameEn: "Devil 2", price: 15000, image: "assets/characters/villain_2.jpg" },
+  { id: "villain_3", name: "شیطان 3", nameEn: "Devil 3", price: 10000, image: "assets/characters/villain_3.jpeg" },
+  { id: "villain_4", name: "شیطان 4", nameEn: "Devil 4", price: 5000, image: "assets/characters/villain_4.jpeg" },
 ];
 
 const translations = {
