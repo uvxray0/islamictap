@@ -11,10 +11,13 @@ const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
 const HERO1_PRICES = [15, 40, 80];
-const HERO1_POWER = [10, 30, 80];
+const HERO1_POWER = [2, 5, 10];
 const HERO2_PRICES = [5, 15, 35];
-const HERO2_POWER = [3, 10, 30];
+const HERO2_POWER = [1, 3, 6];
 const REFERRAL_GEMS = 15;
+
+const VILLAIN_UNLOCK_PRICE = 1000;
+const VILLAIN_IDS = ["villain_1", "villain_2", "villain_3", "villain_4"];
 
 function json(data, status = 200) {
   return Response.json(data, { status, headers: cors });
@@ -124,6 +127,17 @@ export default {
       const row = await env.DB.prepare("SELECT food_capacity_level, hero1_level, hero2_level, gems, active_hero FROM users WHERE id = ?").bind(userId).first();
       const level = row.food_capacity_level;
       const isMax = level >= FOOD_MAX_LEVEL;
+
+      const donRows = await env.DB.prepare("SELECT villain_id, amount, unlocked FROM villain_donations WHERE user_id = ?").bind(userId).all();
+      const donMap = {};
+      donRows.results.forEach(r => { donMap[r.villain_id] = r; });
+
+      const villains = VILLAIN_IDS.map(id => ({
+        id,
+        amount: donMap[id]?.amount || 0,
+        unlocked: donMap[id]?.unlocked || 0,
+      }));
+
       return json({
         upgrades: [{
           id: "food_capacity", level,
@@ -136,6 +150,7 @@ export default {
           { id: 1, level: row.hero1_level, price: row.hero1_level >= 3 ? 0 : HERO1_PRICES[row.hero1_level], power: HERO1_POWER[row.hero1_level], max_level: 3, active: row.active_hero === 1 },
           { id: 2, level: row.hero2_level, price: row.hero2_level >= 3 ? 0 : HERO2_PRICES[row.hero2_level], power: HERO2_POWER[row.hero2_level], max_level: 3, active: row.active_hero === 2 },
         ],
+        villains,
         gems: row.gems,
       });
     }
@@ -167,7 +182,47 @@ export default {
         return json({ ok: true, gems: updated.gems, hero1_level: updated.hero1_level, hero2_level: updated.hero2_level });
       }
 
+      if (type === "villain_unlock") {
+        if (!VILLAIN_IDS.includes(id)) return json({ error: "invalid villain" }, 400);
+        const row = await env.DB.prepare("SELECT score FROM users WHERE id = ?").bind(userId).first();
+        if (row.score < VILLAIN_UNLOCK_PRICE) return json({ error: "not enough score" }, 400);
+        await env.DB.prepare("UPDATE users SET score = score - ? WHERE id = ?").bind(VILLAIN_UNLOCK_PRICE, userId).run();
+        await env.DB.prepare(
+          "INSERT INTO villain_donations (user_id, villain_id, unlocked) VALUES (?, ?, 1) ON CONFLICT(user_id, villain_id) DO UPDATE SET unlocked = 1"
+        ).bind(userId, id).run();
+        const updated = await env.DB.prepare("SELECT score FROM users WHERE id = ?").bind(userId).first();
+        return json({ ok: true, score: updated.score });
+      }
+
       return json({ error: "invalid buy" }, 400);
+    }
+
+    if (url.pathname === "/api/donate" && request.method === "POST") {
+      const body = await request.json().catch(() => ({}));
+      const villainId = body.villain_id;
+      const amount = Math.min(Math.max(Number(body.amount) || 0, 1), 100000);
+      if (!VILLAIN_IDS.includes(villainId)) return json({ error: "invalid villain" }, 400);
+
+      const row = await env.DB.prepare("SELECT score FROM users WHERE id = ?").bind(userId).first();
+      if (row.score < amount) return json({ error: "not enough score" }, 400);
+
+      const don = await env.DB.prepare("SELECT unlocked FROM villain_donations WHERE user_id = ? AND villain_id = ?").bind(userId, villainId).first();
+      if (!don || !don.unlocked) return json({ error: "not unlocked" }, 400);
+
+      await env.DB.batch([
+        env.DB.prepare("UPDATE users SET score = score - ? WHERE id = ?").bind(amount, userId),
+        env.DB.prepare("UPDATE villain_donations SET amount = amount + ? WHERE user_id = ? AND villain_id = ?").bind(amount, userId, villainId),
+      ]);
+
+      const updated = await env.DB.prepare("SELECT score FROM users WHERE id = ?").bind(userId).first();
+      return json({ ok: true, score: updated.score });
+    }
+
+    if (url.pathname === "/api/villains") {
+      const rows = await env.DB.prepare(
+        "SELECT villain_id, SUM(amount) AS total FROM villain_donations GROUP BY villain_id ORDER BY total DESC"
+      ).all();
+      return json({ villains: rows.results });
     }
 
     if (url.pathname === "/api/referral" && request.method === "POST") {
@@ -192,7 +247,10 @@ export default {
 
     if (url.pathname === "/api/referrals") {
       const row = await env.DB.prepare("SELECT gems, referral_count, referred_by FROM users WHERE id = ?").bind(userId).first();
-      return json({ gems: row.gems, referral_count: row.referral_count, referred_by: row.referred_by });
+      const list = await env.DB.prepare(
+        "SELECT r.referred_id, u.username FROM referrals r LEFT JOIN users u ON u.id = r.referred_id WHERE r.referrer_id = ? ORDER BY r.created_at DESC LIMIT 50"
+      ).bind(userId).all();
+      return json({ gems: row.gems, referral_count: row.referral_count, referred_by: row.referred_by, list: list.results });
     }
 
     if (url.pathname === "/api/set-hero" && request.method === "POST") {

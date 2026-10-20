@@ -665,3 +665,123 @@ body {
 .referral-link-box button:active {
   background: var(--brown-deep);
 }
+
+.donate-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 150;
+}
+
+.donate-overlay.show {
+  display: flex;
+}
+
+.donate-modal {
+  background: #2a1f16;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 340px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  text-align: center;
+}
+
+.donate-modal h2 {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.donate-balance {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.donate-modal input {
+  width: 100%;
+  background: var(--pill);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--text);
+  text-align: center;
+  font-weight: 700;
+}
+
+.donate-modal input:focus {
+  outline: none;
+  border-color: var(--brown);
+}
+
+.donate-actions {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.donate-actions button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.donate-cancel {
+  background: var(--pill);
+  color: var(--text);
+  border: 1px solid var(--border) !important;
+}
+
+.donate-confirm {
+  background: var(--brown);
+  color: #fff;
+}
+
+.donate-confirm:active {
+  background: var(--brown-deep);
+}
+
+.char-card-info {
+  padding: 0 10px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.char-card-btn {
+  background: var(--brown);
+  border: none;
+  color: #fff;
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin: 0 10px 10px;
+}
+
+.char-card-btn:active {
+  background: var(--brown-deep);
+}
+
+.char-card-btn:disabled {
+  background: var(--border);
+  color: var(--text-dim);
+  cursor: default;
+}
