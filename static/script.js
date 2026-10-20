@@ -1,13 +1,12 @@
 const API_URL = "https://islamictap-api.xraygate.workers.dev";
 const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
-const VILLAIN_UNLOCK_PRICE = 1000;
 
 const VILLAINS = [
-  { id: "villain_1", name: "شیطان 1", nameEn: "Devil 1", image: "assets/characters/villain_1.jpg" },
-  { id: "villain_2", name: "شیطان 2", nameEn: "Devil 2", image: "assets/characters/villain_2.jpg" },
-  { id: "villain_3", name: "شیطان 3", nameEn: "Devil 3", image: "assets/characters/villain_3.jpeg" },
-  { id: "villain_4", name: "شیطان 4", nameEn: "Devil 4", image: "assets/characters/villain_4.jpeg" },
+  { id: "villain_1", name: "شیطان 1", nameEn: "Devil 1", price: 30000, image: "assets/characters/villain_1.jpg" },
+  { id: "villain_2", name: "شیطان 2", nameEn: "Devil 2", price: 15000, image: "assets/characters/villain_2.jpg" },
+  { id: "villain_3", name: "شیطان 3", nameEn: "Devil 3", price: 10000, image: "assets/characters/villain_3.jpeg" },
+  { id: "villain_4", name: "شیطان 4", nameEn: "Devil 4", price: 5000, image: "assets/characters/villain_4.jpeg" },
 ];
 
 const translations = {
@@ -110,6 +109,8 @@ if (!initData) {
   let food = 500;
   let maxFood = 500;
   let gems = 0;
+  let heroPower = 0;
+  let heroTickTimer = null;
   let pendingTaps = 0;
   let sending = false;
   let debounceTimer = null;
@@ -144,6 +145,21 @@ if (!initData) {
     setTimeout(() => el.remove(), 800);
   }
 
+  function startHeroTick() {
+    if (heroTickTimer) return;
+    heroTickTimer = setInterval(async () => {
+      if (heroPower <= 0) return;
+      score += heroPower;
+      scoreEl.textContent = score;
+      try {
+        await fetch(`${API_URL}/api/hero-tick`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (e) {}
+    }, 1000);
+  }
+
   async function auth() {
     const res = await fetch(`${API_URL}/api/auth`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ initData }) });
     if (!res.ok) throw new Error("auth failed");
@@ -158,6 +174,8 @@ if (!initData) {
     if (data.active_hero === 1) heroFlagEl.textContent = "🇮🇱";
     else if (data.active_hero === 2) heroFlagEl.textContent = "🇺🇸";
     else heroFlagEl.textContent = "";
+    heroPower = data.hero_power || 0;
+    if (heroPower > 0) startHeroTick();
   }
 
   async function processReferral() {
@@ -247,7 +265,7 @@ if (!initData) {
   function renderVillains(villains) {
     const lang = getLang(); shopGrid.innerHTML = "";
     VILLAINS.forEach((v) => {
-      const data = (villains || []).find(x => x.id === v.id) || { amount: 0, unlocked: 0 };
+      const data = (villains || []).find(x => x.id === v.id) || { amount: 0, unlocked: 0, price: v.price };
       const card = document.createElement("div"); card.className = "char-card";
       const img = document.createElement("img"); img.className = "char-card-img"; img.src = v.image; img.alt = lang === "fa" ? v.name : v.nameEn; img.loading = "lazy";
       const name = document.createElement("div"); name.className = "char-card-name";
@@ -257,13 +275,13 @@ if (!initData) {
       if (!data.unlocked) {
         const btn = document.createElement("button");
         btn.className = "char-card-btn";
-        btn.textContent = `${translations[lang].unlock} ${VILLAIN_UNLOCK_PRICE}`;
+        btn.textContent = `${translations[lang].unlock} ${(data.price || v.price).toLocaleString()}`;
         btn.addEventListener("click", (e) => { e.stopPropagation(); unlockVillain(v.id); });
         card.appendChild(btn);
       } else {
         const info = document.createElement("div");
         info.className = "char-card-info";
-        info.textContent = `❤️ ${data.amount.toLocaleString()}`;
+        info.textContent = `💩 ${data.amount.toLocaleString()}`;
         card.appendChild(info);
         const btn = document.createElement("button");
         btn.className = "char-card-btn";
@@ -353,6 +371,7 @@ if (!initData) {
     const data = await res.json();
     if (data.ok) {
       heroFlagEl.textContent = id === 1 ? "🇮🇱" : "🇺🇸";
+      await loadState();
       await loadShop();
     }
   }
