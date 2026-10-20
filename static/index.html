@@ -11,9 +11,7 @@
     <div class="tips-modal">
       <div class="tips-icon">⚠️</div>
       <h2 data-i18n="tips_title">توجه!</h2>
-      <p data-i18n="tips_text">
-        این پروژه موقتی است، حاوی هیچ ارز واقعی نیست، در مرحله توسعه و تست است، و پایداری لازم را ندارد. ممنون که در آزمایش آن هستید!
-      </p>
+      <p data-i18n="tips_text">این پروژه موقتی است، حاوی هیچ ارز واقعی نیست، در مرحله توسعه و تست است، و پایداری لازم را ندارد. ممنون که در آزمایش آن هستید!</p>
       <button class="tips-button" id="tips-ok" data-i18n="tips_ok">باشه</button>
     </div>
   </div>
@@ -24,8 +22,12 @@
     <div class="user-badge">
       <span class="user-avatar" id="user-avatar">?</span>
       <span class="user-name" id="user-name">Guest</span>
+      <span class="hero-flag" id="hero-flag"></span>
     </div>
-    <button class="lang-switch" id="lang-switch">EN</button>
+    <div class="topbar-right">
+      <span class="gems-badge" id="gems">💎 0</span>
+      <button class="lang-switch" id="lang-switch">EN</button>
+    </div>
   </header>
 
   <main class="stage">
@@ -39,9 +41,7 @@
     </button>
 
     <div class="food">
-      <div class="food-bar">
-        <div class="food-fill" id="food-fill"></div>
-      </div>
+      <div class="food-bar"><div class="food-fill" id="food-fill"></div></div>
       <span class="food-text" id="food-text">🍔 500 / 500</span>
     </div>
   </main>
@@ -55,6 +55,10 @@
       <span class="tab-icon">🛒</span>
       <span class="tab-label" data-i18n="tab_shop">فروشگاه</span>
     </button>
+    <button class="tab" data-tab="referral">
+      <span class="tab-icon">👥</span>
+      <span class="tab-label" data-i18n="tab_referral">دعوت</span>
+    </button>
     <button class="tab" data-tab="stats">
       <span class="tab-icon">📊</span>
       <span class="tab-label" data-i18n="tab_stats">آمار</span>
@@ -62,25 +66,48 @@
   </nav>
 
   <div class="shop-panel" id="shop-panel">
-    <div class="shop-header">
-      <h2 data-i18n="shop_title">🛒 فروشگاه</h2>
-    </div>
+    <div class="shop-header"><h2 data-i18n="shop_title">🛒 فروشگاه</h2></div>
     <div class="shop-body">
       <div class="shop-section">
         <h3 class="shop-section-title" data-i18n="shop_upgrades_title">⬆️ ارتقاها</h3>
         <div class="shop-upgrades" id="shop-upgrades"></div>
       </div>
       <div class="shop-section">
-        <h3 class="shop-section-title" data-i18n="shop_chars_title">👹 شخصیت‌های اصلی</h3>
+        <h3 class="shop-section-title" data-i18n="shop_heroes_title">🦸 قهرمان‌ها</h3>
+        <div class="shop-upgrades" id="shop-heroes"></div>
+      </div>
+      <div class="shop-section">
+        <h3 class="shop-section-title" data-i18n="shop_chars_title">👹 شخصیت ها</h3>
         <div class="shop-grid" id="shop-grid"></div>
       </div>
     </div>
   </div>
 
-  <div class="stats-panel" id="stats-panel">
-    <div class="stats-header">
-      <h2 data-i18n="leaderboard_title">🏆 برترین‌ها</h2>
+  <div class="referral-panel" id="referral-panel">
+    <div class="referral-header"><h2 data-i18n="tab_referral">👥 دعوت</h2></div>
+    <div class="referral-body">
+      <div class="referral-stats">
+        <div class="referral-stat">
+          <span class="referral-stat-label" data-i18n="referrals">دعوت‌ها</span>
+          <span class="referral-stat-value" id="ref-count">0</span>
+        </div>
+        <div class="referral-stat">
+          <span class="referral-stat-label" data-i18n="gems">جم</span>
+          <span class="referral-stat-value" id="ref-gems">0</span>
+        </div>
+      </div>
+      <div class="referral-link-section">
+        <div class="referral-link-label" data-i18n="your_link">لینک دعوت شما</div>
+        <div class="referral-link-box">
+          <input type="text" id="ref-link" readonly />
+          <button id="ref-copy" data-i18n="copy">کپی</button>
+        </div>
+      </div>
     </div>
+  </div>
+
+  <div class="stats-panel" id="stats-panel">
+    <div class="stats-header"><h2 data-i18n="leaderboard_title">🏆 برترین‌ها</h2></div>
     <div class="stats-list" id="stats-list"></div>
   </div>
 
