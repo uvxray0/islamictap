@@ -1,0 +1,15 @@
+window.state = {
+  token: null,
+  score: 0,
+  food: 500,
+  maxFood: 500,
+  gems: 0,
+  heroPower: 0,
+  heroTickTimer: null,
+  pendingTaps: 0,
+  sending: false,
+  debounceTimer: null,
+  throttleTimer: null,
+  leaderboardData: null,
+  currentVillain: null,
+};
