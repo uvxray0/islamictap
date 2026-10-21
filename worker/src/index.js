@@ -13,7 +13,7 @@ const FOOD_REGEN_INTERVAL = 1000;
 const HERO1_PRICES = [15, 40, 80];
 const HERO1_POWER = [2, 5, 10];
 const HERO2_PRICES = [5, 15, 35];
-const HERO2_POWER = [1, 3, 6];
+const HERO2_POWER = [1, 2, 4];
 
 const REFERRAL_GEMS = 15;
 
@@ -69,10 +69,11 @@ function calcFood(currentFood, lastRegen, maxFood) {
   return { food: newFood, lastRegen: now };
 }
 
-function getHeroPower(hero1_level, hero2_level, active_hero) {
-  if (active_hero === 1 && hero1_level > 0) return HERO1_POWER[hero1_level - 1];
-  if (active_hero === 2 && hero2_level > 0) return HERO2_POWER[hero2_level - 1];
-  return 0;
+function getTotalPower(hero1_level, hero2_level) {
+  let power = 0;
+  if (hero1_level > 0) power += HERO1_POWER[hero1_level - 1];
+  if (hero2_level > 0) power += HERO2_POWER[hero2_level - 1];
+  return power;
 }
 
 export default {
@@ -121,11 +122,11 @@ export default {
 
     if (url.pathname === "/api/me") {
       const row = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
-      if (!row) return json({ id: userId, score: 0, food: 500, max_food: 500, gems: 0 });
+      if (!row) return json({ id: userId, score: 0, food: 500, max_food: 500, gems: 0, hero_power: 0 });
 
       const maxFood = getMaxFood(row.food_capacity_level);
       const { food } = calcFood(row.food, row.last_regen, maxFood);
-      const heroPower = getHeroPower(row.hero1_level, row.hero2_level, row.active_hero);
+      const heroPower = getTotalPower(row.hero1_level, row.hero2_level);
 
       return json({ ...row, food, max_food: maxFood, hero_power: heroPower });
     }
@@ -147,10 +148,10 @@ export default {
 
     if (url.pathname === "/api/hero-tick" && request.method === "POST") {
       const row = await env.DB.prepare(
-        "SELECT hero1_level, hero2_level, active_hero FROM users WHERE id = ?"
+        "SELECT hero1_level, hero2_level FROM users WHERE id = ?"
       ).bind(userId).first();
 
-      const power = getHeroPower(row.hero1_level, row.hero2_level, row.active_hero);
+      const power = getTotalPower(row.hero1_level, row.hero2_level);
       if (power <= 0) return json({ ok: false, power: 0 });
 
       await env.DB.prepare("UPDATE users SET score = score + ? WHERE id = ?").bind(power, userId).run();
@@ -159,7 +160,7 @@ export default {
     }
 
     if (url.pathname === "/api/shop") {
-      const row = await env.DB.prepare("SELECT food_capacity_level, hero1_level, hero2_level, gems, active_hero FROM users WHERE id = ?").bind(userId).first();
+      const row = await env.DB.prepare("SELECT food_capacity_level, hero1_level, hero2_level, gems FROM users WHERE id = ?").bind(userId).first();
       const level = row.food_capacity_level;
       const isMax = level >= FOOD_MAX_LEVEL;
 
@@ -183,8 +184,8 @@ export default {
           max_level: FOOD_MAX_LEVEL,
         }],
         heroes: [
-          { id: 1, level: row.hero1_level, price: row.hero1_level >= 3 ? 0 : HERO1_PRICES[row.hero1_level], power: HERO1_POWER[row.hero1_level], max_level: 3, active: row.active_hero === 1 },
-          { id: 2, level: row.hero2_level, price: row.hero2_level >= 3 ? 0 : HERO2_PRICES[row.hero2_level], power: HERO2_POWER[row.hero2_level], max_level: 3, active: row.active_hero === 2 },
+          { id: 1, level: row.hero1_level, price: row.hero1_level >= 3 ? 0 : HERO1_PRICES[row.hero1_level], power: HERO1_POWER[row.hero1_level], max_level: 3 },
+          { id: 2, level: row.hero2_level, price: row.hero2_level >= 3 ? 0 : HERO2_PRICES[row.hero2_level], power: HERO2_POWER[row.hero2_level], max_level: 3 },
         ],
         villains,
         gems: row.gems,
@@ -215,7 +216,8 @@ export default {
         const col = id === 1 ? "hero1_level" : "hero2_level";
         await env.DB.prepare(`UPDATE users SET gems = gems - ?, ${col} = ${col} + 1 WHERE id = ?`).bind(price, userId).run();
         const updated = await env.DB.prepare("SELECT gems, hero1_level, hero2_level FROM users WHERE id = ?").bind(userId).first();
-        return json({ ok: true, gems: updated.gems, hero1_level: updated.hero1_level, hero2_level: updated.hero2_level });
+        const newPower = getTotalPower(updated.hero1_level, updated.hero2_level);
+        return json({ ok: true, gems: updated.gems, hero1_level: updated.hero1_level, hero2_level: updated.hero2_level, hero_power: newPower });
       }
 
       if (type === "villain_unlock") {
@@ -284,17 +286,6 @@ export default {
         "SELECT r.referred_id, u.username FROM referrals r LEFT JOIN users u ON u.id = r.referred_id WHERE r.referrer_id = ? ORDER BY r.created_at DESC LIMIT 50"
       ).bind(userId).all();
       return json({ gems: row.gems, referral_count: row.referral_count, referred_by: row.referred_by, list: list.results });
-    }
-
-    if (url.pathname === "/api/set-hero" && request.method === "POST") {
-      const body = await request.json().catch(() => ({}));
-      const hero = body.hero;
-      if (hero !== 1 && hero !== 2 && hero !== null) return json({ error: "invalid hero" }, 400);
-      const row = await env.DB.prepare("SELECT hero1_level, hero2_level FROM users WHERE id = ?").bind(userId).first();
-      if (hero === 1 && row.hero1_level < 1) return json({ error: "not owned" }, 400);
-      if (hero === 2 && row.hero2_level < 1) return json({ error: "not owned" }, 400);
-      await env.DB.prepare("UPDATE users SET active_hero = ? WHERE id = ?").bind(hero, userId).run();
-      return json({ ok: true, active_hero: hero });
     }
 
     return json({ error: "not found" }, 404);

@@ -785,3 +785,25 @@ body {
   color: var(--text-dim);
   cursor: default;
 }
+
+.speed-display {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--food);
+  background: var(--pill);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}
+
+.speed-display {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--food);
+  background: var(--pill);
+  border: 1px solid var(--border);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-variant-numeric: tabular-nums;
+}

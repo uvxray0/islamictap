@@ -18,7 +18,7 @@ const translations = {
     toast_no_score: "موجودی کافی نیست", toast_max_level: "به حداکثر سطح رسیدی", toast_buy_success: "خرید موفق!", toast_coming_soon: "به‌زودی!",
     toast_no_gems: "جم کافی نیست", toast_donated: "اهدا شد!", toast_invalid_amount: "مقدار نامعتبر", toast_not_unlocked: "ابتدا قفل‌گشایی کنید",
     hero1: "قهرمان ۱", hero2: "قهرمان ۲", gems: "جم", referrals: "دعوت‌ها", your_link: "لینک دعوت شما", copy: "کپی", copied: "کپی شد!",
-    unlock: "قفل‌گشایی", donate: "اهدا", donate_to: "اهدا به", balance: "موجودی", select: "انتخاب",
+    unlock: "قفل‌گشایی", donate: "اهدا", donate_to: "اهدا به", balance: "موجودی", cancel: "لغو", confirm: "تأیید", donate_amount: "مقدار اهدا",
   },
   en: {
     tips_title: "Attention!", tips_text: "This project is temporary, contains no real currency, is under development and testing, and has no stability guarantee. Thanks for testing it!",
@@ -28,9 +28,23 @@ const translations = {
     toast_no_score: "Not enough score", toast_max_level: "Max level reached", toast_buy_success: "Purchased!", toast_coming_soon: "Coming soon!",
     toast_no_gems: "Not enough gems", toast_donated: "Donated!", toast_invalid_amount: "Invalid amount", toast_not_unlocked: "Unlock first",
     hero1: "Hero 1", hero2: "Hero 2", gems: "Gems", referrals: "Referrals", your_link: "Your invite link", copy: "Copy", copied: "Copied!",
-    unlock: "Unlock", donate: "Donate", donate_to: "Donate to", balance: "Balance", select: "Select",
+    unlock: "Unlock", donate: "Donate", donate_to: "Donate to", balance: "Balance", cancel: "Cancel", confirm: "Confirm", donate_amount: "Donation amount",
   },
 };
+
+let currentVillain = null;
+let score = 0;
+let food = 500;
+let maxFood = 500;
+let gems = 0;
+let heroPower = 0;
+let heroTickTimer = null;
+let pendingTaps = 0;
+let sending = false;
+let debounceTimer = null;
+let throttleTimer = null;
+let leaderboardData = null;
+let token = null;
 
 function getLang() { return localStorage.getItem("lang") || "fa"; }
 
@@ -38,11 +52,25 @@ function setLang(lang) {
   localStorage.setItem("lang", lang);
   document.documentElement.lang = lang;
   document.documentElement.dir = lang === "fa" ? "rtl" : "ltr";
+
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     if (translations[lang][key]) el.textContent = translations[lang][key];
   });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (translations[lang][key]) el.placeholder = translations[lang][key];
+  });
+
   document.getElementById("lang-switch").textContent = lang === "fa" ? "EN" : "فا";
+
+  const donateTitle = document.getElementById("donate-title");
+  const donateBalance = document.getElementById("donate-balance");
+  if (currentVillain) {
+    donateTitle.textContent = `${translations[lang].donate_to} ${lang === "fa" ? currentVillain.name : currentVillain.nameEn}`;
+    donateBalance.textContent = `${translations[lang].balance}: ${score.toLocaleString()}`;
+  }
 }
 
 document.getElementById("lang-switch").addEventListener("click", () => setLang(getLang() === "fa" ? "en" : "fa"));
@@ -84,6 +112,7 @@ if (!initData) {
   const avatarEl = document.getElementById("user-avatar");
   const foodFill = document.getElementById("food-fill");
   const foodText = document.getElementById("food-text");
+  const speedEl = document.getElementById("speed-display");
   const statsPanel = document.getElementById("stats-panel");
   const statsList = document.getElementById("stats-list");
   const shopPanel = document.getElementById("shop-panel");
@@ -92,7 +121,6 @@ if (!initData) {
   const shopGrid = document.getElementById("shop-grid");
   const referralPanel = document.getElementById("referral-panel");
   const gemsEl = document.getElementById("gems");
-  const heroFlagEl = document.getElementById("hero-flag");
   const refCountEl = document.getElementById("ref-count");
   const refGemsEl = document.getElementById("ref-gems");
   const refLinkEl = document.getElementById("ref-link");
@@ -103,20 +131,6 @@ if (!initData) {
   const donateInput = document.getElementById("donate-input");
   const donateCancel = document.getElementById("donate-cancel");
   const donateConfirm = document.getElementById("donate-confirm");
-
-  let token = null;
-  let score = 0;
-  let food = 500;
-  let maxFood = 500;
-  let gems = 0;
-  let heroPower = 0;
-  let heroTickTimer = null;
-  let pendingTaps = 0;
-  let sending = false;
-  let debounceTimer = null;
-  let throttleTimer = null;
-  let leaderboardData = null;
-  let currentVillain = null;
 
   const displayName = tg.initDataUnsafe.user.first_name || "Player";
   nameEl.textContent = displayName;
@@ -132,6 +146,16 @@ if (!initData) {
   }
 
   function updateGemsUI() { gemsEl.textContent = `💎 ${gems}`; }
+
+  function updateSpeedUI() {
+    if (!speedEl) return;
+    if (heroPower > 0) {
+      speedEl.textContent = `⚡ ${heroPower}/s`;
+      speedEl.style.display = "block";
+    } else {
+      speedEl.style.display = "none";
+    }
+  }
 
   function regenFood() {
     if (food < maxFood) { food = Math.min(food + FOOD_REGEN, maxFood); updateFoodUI(); }
@@ -170,11 +194,8 @@ if (!initData) {
     const res = await fetch(`${API_URL}/api/me`, { headers: { Authorization: `Bearer ${token}` } });
     const data = await res.json();
     score = data.score; food = data.food; maxFood = data.max_food; gems = data.gems;
-    scoreEl.textContent = score; updateFoodUI(); updateGemsUI();
-    if (data.active_hero === 1) heroFlagEl.textContent = "🇮🇱";
-    else if (data.active_hero === 2) heroFlagEl.textContent = "🇺🇸";
-    else heroFlagEl.textContent = "";
     heroPower = data.hero_power || 0;
+    scoreEl.textContent = score; updateFoodUI(); updateGemsUI(); updateSpeedUI();
     if (heroPower > 0) startHeroTick();
   }
 
@@ -241,23 +262,13 @@ if (!initData) {
       const icon = document.createElement("div"); icon.className = "shop-card-icon"; icon.textContent = h.id === 1 ? "🇮🇱" : "🇺🇸";
       const info = document.createElement("div"); info.className = "shop-card-info";
       const title = document.createElement("div"); title.className = "shop-card-title";
-      title.textContent = `${h.id === 1 ? translations[lang].hero1 : translations[lang].hero2} (Lv ${h.level})${h.active ? " ✅" : ""}`;
+      title.textContent = `${h.id === 1 ? translations[lang].hero1 : translations[lang].hero2} (Lv ${h.level})`;
       const desc = document.createElement("div"); desc.className = "shop-card-desc"; desc.textContent = `${h.power}/s`;
       info.appendChild(title); info.appendChild(desc);
       const btn = document.createElement("button"); btn.className = "shop-card-btn";
       if (h.level >= h.max_level) { btn.textContent = translations[lang].max_level; btn.disabled = true; }
       else { btn.textContent = `💎 ${h.price}`; btn.addEventListener("click", () => buy("hero", h.id)); }
       card.appendChild(icon); card.appendChild(info); card.appendChild(btn);
-
-      if (h.level > 0 && !h.active) {
-        const selBtn = document.createElement("button");
-        selBtn.className = "shop-card-btn";
-        selBtn.style.marginRight = "6px";
-        selBtn.textContent = translations[lang].select;
-        selBtn.addEventListener("click", () => selectHero(h.id));
-        card.appendChild(selBtn);
-      }
-
       shopHeroes.appendChild(card);
     });
   }
@@ -362,20 +373,6 @@ if (!initData) {
     }
   });
 
-  async function selectHero(id) {
-    const res = await fetch(`${API_URL}/api/set-hero`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ hero: id }),
-    });
-    const data = await res.json();
-    if (data.ok) {
-      heroFlagEl.textContent = id === 1 ? "🇮🇱" : "🇺🇸";
-      await loadState();
-      await loadShop();
-    }
-  }
-
   async function buy(type, id) {
     const lang = getLang();
     const res = await fetch(`${API_URL}/api/buy`, {
@@ -394,6 +391,11 @@ if (!initData) {
     if (data.score !== undefined) { score = data.score; scoreEl.textContent = score; }
     if (data.max_food !== undefined) { maxFood = data.max_food; updateFoodUI(); }
     if (data.gems !== undefined) { gems = data.gems; updateGemsUI(); }
+    if (data.hero_power !== undefined) {
+      heroPower = data.hero_power;
+      updateSpeedUI();
+      if (heroPower > 0) startHeroTick();
+    }
     showToast(translations[lang].toast_buy_success, "success");
     await loadShop();
   }

@@ -20,12 +20,12 @@
 
   <div class="donate-overlay" id="donate-overlay">
     <div class="donate-modal">
-      <h2 id="donate-title">اهدا</h2>
+      <h2 id="donate-title" data-i18n="donate">اهدا</h2>
       <p class="donate-balance" id="donate-balance">موجودی: 0</p>
-      <input type="number" id="donate-input" placeholder="مقدار اهدا" min="1" />
+      <input type="number" id="donate-input" min="1" data-i18n-placeholder="donate_amount" placeholder="مقدار اهدا" />
       <div class="donate-actions">
-        <button class="donate-cancel" id="donate-cancel">لغو</button>
-        <button class="donate-confirm" id="donate-confirm">اهدا</button>
+        <button class="donate-cancel" id="donate-cancel" data-i18n="cancel">لغو</button>
+        <button class="donate-confirm" id="donate-confirm" data-i18n="confirm">تأیید</button>
       </div>
     </div>
   </div>
@@ -34,7 +34,6 @@
     <div class="user-badge">
       <span class="user-avatar" id="user-avatar">?</span>
       <span class="user-name" id="user-name">Guest</span>
-      <span class="hero-flag" id="hero-flag"></span>
     </div>
     <div class="topbar-right">
       <span class="gems-badge" id="gems">💎 0</span>
@@ -56,6 +55,8 @@
       <div class="food-bar"><div class="food-fill" id="food-fill"></div></div>
       <span class="food-text" id="food-text">🍔 500 / 500</span>
     </div>
+
+    <div class="speed-display" id="speed-display" style="display:none"></div>
   </main>
 
   <nav class="bottombar">
