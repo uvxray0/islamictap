@@ -85,7 +85,7 @@ async function loadState() {
 
 async function loadLeaderboard() {
   const data = await apiLeaderboard();
-  window.state.leaderboardData = data.top;
+  window.state.leaderboardData = data;
   renderLeaderboard(window.state.leaderboardData);
 }
 
@@ -157,7 +157,7 @@ async function init() {
 
       if (target === "stats") {
         document.getElementById("stats-panel").classList.add("show");
-        renderLeaderboard(window.state.leaderboardData || []);
+        renderLeaderboard(window.state.leaderboardData || { total_users: 0, top: [] });
       } else if (target === "shop") {
         document.getElementById("shop-panel").classList.add("show");
         loadShop();

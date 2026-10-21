@@ -111,8 +111,18 @@ export default {
     }
 
     if (url.pathname === "/api/leaderboard") {
-      const rows = await env.DB.prepare("SELECT id, username, score FROM users ORDER BY score DESC LIMIT 10").all();
-      return json({ top: rows.results });
+      const totalRow = await env.DB.prepare("SELECT COUNT(*) AS total FROM users").first();
+
+      const rows = await env.DB.prepare(
+        `SELECT u.id, u.username, COALESCE(SUM(d.amount), 0) AS donated
+         FROM users u
+         LEFT JOIN villain_donations d ON d.user_id = u.id
+         GROUP BY u.id
+         ORDER BY donated DESC
+         LIMIT 10`
+      ).all();
+
+      return json({ total_users: totalRow.total, top: rows.results });
     }
 
     if (url.pathname === "/api/villains") {

@@ -31,6 +31,19 @@
   font-weight: 700;
 }
 
+.stats-header h2 {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.total-members {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
 .stats-list {
   flex: 1;
   overflow-y: auto;
