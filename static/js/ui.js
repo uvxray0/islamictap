@@ -43,13 +43,19 @@ function spawnFloat(x, y) {
   setTimeout(() => el.remove(), 800);
 }
 
-function renderLeaderboard(top) {
+function renderLeaderboard(data) {
   const lang = getLang();
   const medals = ["🥇", "🥈", "🥉"];
   const list = document.getElementById("stats-list");
+  const header = document.querySelector(".stats-header h2");
+
+  if (header) {
+    header.innerHTML = `${translations[lang].leaderboard_title} <span class="total-members">${(data.total_users || 0).toLocaleString()} ${translations[lang].members}</span>`;
+  }
+
   list.innerHTML = "";
 
-  top.forEach((user, i) => {
+  (data.top || []).forEach((user, i) => {
     const row = document.createElement("div");
     row.className = "stats-row";
 
@@ -61,13 +67,13 @@ function renderLeaderboard(top) {
     name.className = "stats-name";
     name.textContent = user.username ? "@" + user.username : translations[lang].no_username;
 
-    const score = document.createElement("div");
-    score.className = "stats-score";
-    score.textContent = user.score.toLocaleString();
+    const donated = document.createElement("div");
+    donated.className = "stats-score";
+    donated.textContent = `💩 ${(user.donated || 0).toLocaleString()}`;
 
     row.appendChild(rank);
     row.appendChild(name);
-    row.appendChild(score);
+    row.appendChild(donated);
     list.appendChild(row);
   });
 }
@@ -125,7 +131,9 @@ function renderHeroes(heroes) {
 
   heroes.forEach((h) => {
     const isMax = h.level >= h.max_level;
-    const displayPower = isMax ? (h.id === 1 ? 10 : 4) : h.power;
+    const powerArr = h.id === 1 ? [2, 5, 10] : [1, 2, 4];
+    const currentPower = h.level >= 1 ? powerArr[h.level - 1] : 0;
+    const nextPower = isMax ? currentPower : powerArr[h.level];
 
     const card = document.createElement("div");
     card.className = "shop-card";
@@ -143,7 +151,7 @@ function renderHeroes(heroes) {
 
     const desc = document.createElement("div");
     desc.className = "shop-card-desc";
-    desc.textContent = `${displayPower}/s`;
+    desc.textContent = isMax ? `${currentPower}/s` : `${currentPower} → ${nextPower}/s`;
 
     info.appendChild(title);
     info.appendChild(desc);
