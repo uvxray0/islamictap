@@ -186,11 +186,18 @@ async function init() {
     const data = await apiAuth(initData);
     window.state.token = data.token;
     await loadState();
-    await processReferral();
-    await loadLeaderboard();
   } catch (e) {
     document.getElementById("score").textContent = "?";
+    return;
   }
+
+  try {
+    await processReferral();
+  } catch (e) {}
+
+  try {
+    await loadLeaderboard();
+  } catch (e) {}
 }
 
 document.addEventListener("DOMContentLoaded", init);
