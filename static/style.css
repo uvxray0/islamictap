@@ -552,9 +552,16 @@ body {
   color: #a78bfa;
 }
 
-.hero-flag {
-  font-size: 16px;
-  margin-left: 4px;
+.speed-badge {
+  background: var(--pill);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--food);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .referral-panel {
@@ -784,26 +791,4 @@ body {
   background: var(--border);
   color: var(--text-dim);
   cursor: default;
-}
-
-.speed-display {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--food);
-  background: var(--pill);
-  border: 1px solid var(--border);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-variant-numeric: tabular-nums;
-}
-
-.speed-display {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--food);
-  background: var(--pill);
-  border: 1px solid var(--border);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-variant-numeric: tabular-nums;
 }

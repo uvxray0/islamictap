@@ -33,6 +33,11 @@ function getMaxFood(level) {
   return FOOD_SPACES[Math.min(level, FOOD_MAX_LEVEL)];
 }
 
+function getHeroPower(level, powerArray) {
+  if (level >= 1 && level <= 3) return powerArray[level - 1];
+  return 0;
+}
+
 async function verifyInitData(initData, botToken) {
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
@@ -184,8 +189,20 @@ export default {
           max_level: FOOD_MAX_LEVEL,
         }],
         heroes: [
-          { id: 1, level: row.hero1_level, price: row.hero1_level >= 3 ? 0 : HERO1_PRICES[row.hero1_level], power: HERO1_POWER[row.hero1_level], max_level: 3 },
-          { id: 2, level: row.hero2_level, price: row.hero2_level >= 3 ? 0 : HERO2_PRICES[row.hero2_level], power: HERO2_POWER[row.hero2_level], max_level: 3 },
+          { 
+            id: 1, 
+            level: row.hero1_level, 
+            price: row.hero1_level >= 3 ? 0 : HERO1_PRICES[row.hero1_level], 
+            power: getHeroPower(row.hero1_level, HERO1_POWER), 
+            max_level: 3 
+          },
+          { 
+            id: 2, 
+            level: row.hero2_level, 
+            price: row.hero2_level >= 3 ? 0 : HERO2_PRICES[row.hero2_level], 
+            power: getHeroPower(row.hero2_level, HERO2_POWER), 
+            max_level: 3 
+          },
         ],
         villains,
         gems: row.gems,

@@ -151,7 +151,7 @@ if (!initData) {
     if (!speedEl) return;
     if (heroPower > 0) {
       speedEl.textContent = `⚡ ${heroPower}/s`;
-      speedEl.style.display = "block";
+      speedEl.style.display = "inline-block";
     } else {
       speedEl.style.display = "none";
     }
@@ -242,14 +242,18 @@ if (!initData) {
   function renderUpgrades(upgrades) {
     const lang = getLang(); shopUpgrades.innerHTML = "";
     upgrades.forEach((up) => {
+      const isMax = up.level >= up.max_level;
       const card = document.createElement("div"); card.className = "shop-card";
       const icon = document.createElement("div"); icon.className = "shop-card-icon"; icon.textContent = "🍔";
       const info = document.createElement("div"); info.className = "shop-card-info";
       const title = document.createElement("div"); title.className = "shop-card-title"; title.textContent = `${translations[lang].food_storage} (Lv ${up.level})`;
-      const desc = document.createElement("div"); desc.className = "shop-card-desc"; desc.textContent = `${up.current} → ${up.next}`;
-      info.appendChild(title); info.appendChild(desc);
+      info.appendChild(title);
+      if (!isMax) {
+        const desc = document.createElement("div"); desc.className = "shop-card-desc"; desc.textContent = `${up.current} → ${up.next}`;
+        info.appendChild(desc);
+      }
       const btn = document.createElement("button"); btn.className = "shop-card-btn";
-      if (up.level >= up.max_level) { btn.textContent = translations[lang].max_level; btn.disabled = true; }
+      if (isMax) { btn.textContent = translations[lang].max_level; btn.disabled = true; }
       else { btn.textContent = `${translations[lang].buy} ${up.price}`; btn.addEventListener("click", () => buy("food", null)); }
       card.appendChild(icon); card.appendChild(info); card.appendChild(btn); shopUpgrades.appendChild(card);
     });
@@ -258,15 +262,17 @@ if (!initData) {
   function renderHeroes(heroes) {
     const lang = getLang(); shopHeroes.innerHTML = "";
     heroes.forEach((h) => {
+      const isMax = h.level >= h.max_level;
+      const displayPower = isMax ? (h.id === 1 ? 10 : 4) : h.power;
       const card = document.createElement("div"); card.className = "shop-card";
       const icon = document.createElement("div"); icon.className = "shop-card-icon"; icon.textContent = h.id === 1 ? "🇮🇱" : "🇺🇸";
       const info = document.createElement("div"); info.className = "shop-card-info";
       const title = document.createElement("div"); title.className = "shop-card-title";
       title.textContent = `${h.id === 1 ? translations[lang].hero1 : translations[lang].hero2} (Lv ${h.level})`;
-      const desc = document.createElement("div"); desc.className = "shop-card-desc"; desc.textContent = `${h.power}/s`;
+      const desc = document.createElement("div"); desc.className = "shop-card-desc"; desc.textContent = `${displayPower}/s`;
       info.appendChild(title); info.appendChild(desc);
       const btn = document.createElement("button"); btn.className = "shop-card-btn";
-      if (h.level >= h.max_level) { btn.textContent = translations[lang].max_level; btn.disabled = true; }
+      if (isMax) { btn.textContent = translations[lang].max_level; btn.disabled = true; }
       else { btn.textContent = `💎 ${h.price}`; btn.addEventListener("click", () => buy("hero", h.id)); }
       card.appendChild(icon); card.appendChild(info); card.appendChild(btn);
       shopHeroes.appendChild(card);
