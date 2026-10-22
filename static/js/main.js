@@ -4,6 +4,18 @@ let foodRegen = 2;
 let tg = null;
 let initData = "";
 
+let tapCount = 0;
+let tapResetTimer = null;
+const MAX_TAPS_PER_SECOND = 10;
+
+const recentTaps = [];
+const TAP_HISTORY_SIZE = 20;
+const POSITION_THRESHOLD = 5;
+const TIME_VARIANCE_THRESHOLD = 5;
+
+let autoClickerWarnings = 0;
+let autoClickerCooldown = 0;
+
 function startThrottle() {
   if (window.state.throttleTimer) return;
   window.state.throttleTimer = setInterval(flushTaps, 5000);
@@ -65,6 +77,90 @@ function regenFood() {
     window.state.food = Math.min(window.state.food + foodRegen, window.state.maxFood);
     updateFoodUI();
   }
+}
+
+function canTap(x, y) {
+  if (autoClickerCooldown > 0) {
+    autoClickerCooldown--;
+    return false;
+  }
+
+  if (tapCount >= MAX_TAPS_PER_SECOND) return false;
+
+  const now = Date.now();
+  recentTaps.push({ x, y, t: now });
+  if (recentTaps.length > TAP_HISTORY_SIZE) recentTaps.shift();
+
+  tapCount++;
+  if (!tapResetTimer) {
+    tapResetTimer = setTimeout(() => {
+      tapCount = 0;
+      tapResetTimer = null;
+    }, 1000);
+  }
+
+  if (recentTaps.length >= 5 && isAutoClicker(recentTaps)) {
+    showAutoClickerWarning();
+    autoClickerCooldown = 20;
+    return false;
+  }
+
+  return true;
+}
+
+function isAutoClicker(taps) {
+  let samePositionCount = 0;
+  for (let i = 1; i < taps.length; i++) {
+    const dx = Math.abs(taps[i].x - taps[i - 1].x);
+    const dy = Math.abs(taps[i].y - taps[i - 1].y);
+    if (dx < POSITION_THRESHOLD && dy < POSITION_THRESHOLD) {
+      samePositionCount++;
+    }
+  }
+
+  const positionRatio = samePositionCount / (taps.length - 1);
+  if (positionRatio < 0.9) return false;
+
+  const intervals = [];
+  for (let i = 1; i < taps.length; i++) {
+    intervals.push(taps[i].t - taps[i - 1].t);
+  }
+
+  const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+  const variance = intervals.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / intervals.length;
+  const stdDev = Math.sqrt(variance);
+
+  if (stdDev < TIME_VARIANCE_THRESHOLD) return true;
+
+  return false;
+}
+
+function showAutoClickerWarning() {
+  autoClickerWarnings++;
+
+  const warnings = {
+    fa: [
+      "🎯 دوست عزیز، auto clicker رو خاموش کن!",
+      "😔 می‌دونم ازش متنفری، ولی چرا گوش نمی‌دی؟",
+      "😠 خاموشش کن دیگه!",
+    ],
+    en: [
+      "🎯 Hey friend, turn off the auto clicker!",
+      "😔 I know you hate it, but why won't you listen?",
+      "😠 Turn it off already!",
+    ],
+  };
+
+  const lang = getLang();
+  const messages = warnings[lang];
+  const index = (autoClickerWarnings - 1) % messages.length;
+  const message = messages[index];
+
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = "toast error show";
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.classList.remove("show"), 3500);
 }
 
 async function loadState() {
@@ -134,6 +230,7 @@ async function init() {
 
   const coinEl = document.getElementById("coin");
   coinEl.addEventListener("click", (e) => {
+    if (!canTap(e.clientX, e.clientY)) return;
     if (window.state.food < 1) return;
     window.state.food -= 1;
     window.state.score += 1;

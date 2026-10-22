@@ -18,9 +18,9 @@ function updateSpeedUI() {
   const heroPowerVal = window.state.heroPower || 0;
 
   if (heroPowerVal > 0) {
-    el.textContent = `🍔 ${foodRegenVal} | ⚡ ${heroPowerVal}`;
+    el.textContent = `🍔 ${foodRegenVal}/s | ⚡ ${heroPowerVal}/s`;
   } else {
-    el.textContent = `🍔 ${foodRegenVal}`;
+    el.textContent = `🍔 ${foodRegenVal}/s`;
   }
 
   el.style.display = "inline-block";
@@ -45,7 +45,7 @@ function spawnFloat(x, y) {
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 800);
+  setTimeout(() => el.remove(), 1500);
 }
 
 function renderLeaderboard(data) {
