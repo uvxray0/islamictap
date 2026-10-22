@@ -40,9 +40,14 @@ async function buy(type, id) {
   }
   if (data.hero_power !== undefined) {
     window.state.heroPower = data.hero_power;
-    updateSpeedUI();
-    if (window.state.heroPower > 0) startHeroTick();
   }
+  if (data.food_regen !== undefined) {
+    foodRegen = data.food_regen;
+  }
+
+  updateSpeedUI();
+
+  if (window.state.heroPower > 0) startHeroTick();
 
   showToast(translations[lang].toast_buy_success, "success");
   await loadShop();

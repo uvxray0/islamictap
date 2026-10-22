@@ -1,6 +1,6 @@
-const FOOD_REGEN = 2;
 const FOOD_REGEN_INTERVAL = 1000;
 
+let foodRegen = 2;
 let tg = null;
 let initData = "";
 
@@ -62,7 +62,7 @@ function startHeroTick() {
 
 function regenFood() {
   if (window.state.food < window.state.maxFood) {
-    window.state.food = Math.min(window.state.food + FOOD_REGEN, window.state.maxFood);
+    window.state.food = Math.min(window.state.food + foodRegen, window.state.maxFood);
     updateFoodUI();
   }
 }
@@ -74,6 +74,7 @@ async function loadState() {
   window.state.maxFood = data.max_food;
   window.state.gems = data.gems;
   window.state.heroPower = data.hero_power || 0;
+  foodRegen = data.food_regen || 2;
 
   document.getElementById("score").textContent = window.state.score;
   updateFoodUI();

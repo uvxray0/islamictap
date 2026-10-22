@@ -7,8 +7,10 @@ const cors = {
 const FOOD_SPACES = [500, 1000, 2000, 4000, 6000, 8000];
 const FOOD_PRICES = [2000, 4000, 6000, 8000, 10000];
 const FOOD_MAX_LEVEL = 5;
-const FOOD_REGEN = 2;
-const FOOD_REGEN_INTERVAL = 1000;
+
+const PRODUCTION_SPEEDS = [2, 3, 4, 6, 8, 12];
+const PRODUCTION_PRICES = [2500, 5000, 10000, 20000, 40000];
+const PRODUCTION_MAX_LEVEL = 5;
 
 const HERO1_PRICES = [15, 40, 80];
 const HERO1_POWER = [2, 5, 10];
@@ -31,6 +33,10 @@ function json(data, status = 200) {
 
 function getMaxFood(level) {
   return FOOD_SPACES[Math.min(level, FOOD_MAX_LEVEL)];
+}
+
+function getFoodRegen(level) {
+  return PRODUCTION_SPEEDS[Math.min(level, PRODUCTION_MAX_LEVEL)];
 }
 
 function getHeroPower(level, powerArray) {
@@ -66,10 +72,10 @@ async function getUserFromToken(request, env) {
   return row ? row.user_id : null;
 }
 
-function calcFood(currentFood, lastRegen, maxFood) {
+function calcFood(currentFood, lastRegen, maxFood, foodRegen) {
   const now = Math.floor(Date.now() / 1000);
   const elapsed = now - lastRegen;
-  const regen = Math.floor((elapsed * FOOD_REGEN) / (FOOD_REGEN_INTERVAL / 1000));
+  const regen = Math.floor(elapsed * foodRegen);
   const newFood = Math.min(currentFood + regen, maxFood);
   return { food: newFood, lastRegen: now };
 }
@@ -137,22 +143,24 @@ export default {
 
     if (url.pathname === "/api/me") {
       const row = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
-      if (!row) return json({ id: userId, score: 0, food: 500, max_food: 500, gems: 0, hero_power: 0 });
+      if (!row) return json({ id: userId, score: 0, food: 500, max_food: 500, gems: 0, hero_power: 0, food_regen: 2 });
 
       const maxFood = getMaxFood(row.food_capacity_level);
-      const { food } = calcFood(row.food, row.last_regen, maxFood);
+      const foodRegen = getFoodRegen(row.production_level || 0);
+      const { food } = calcFood(row.food, row.last_regen, maxFood, foodRegen);
       const heroPower = getTotalPower(row.hero1_level, row.hero2_level);
 
-      return json({ ...row, food, max_food: maxFood, hero_power: heroPower });
+      return json({ ...row, food, max_food: maxFood, hero_power: heroPower, food_regen: foodRegen });
     }
 
     if (url.pathname === "/api/tap" && request.method === "POST") {
       const body = await request.json().catch(() => ({}));
       const count = Math.min(Math.max(Number(body.count) || 1, 1), 1000);
-      const row = await env.DB.prepare("SELECT food, last_regen, food_capacity_level FROM users WHERE id = ?").bind(userId).first();
+      const row = await env.DB.prepare("SELECT food, last_regen, food_capacity_level, production_level FROM users WHERE id = ?").bind(userId).first();
       const maxFood = getMaxFood(row.food_capacity_level);
+      const foodRegen = getFoodRegen(row.production_level || 0);
       const now = Math.floor(Date.now() / 1000);
-      const { food } = calcFood(row.food, row.last_regen, maxFood);
+      const { food } = calcFood(row.food, row.last_regen, maxFood, foodRegen);
       const actualCount = Math.min(count, food);
       if (actualCount <= 0) return json({ error: "no food", food: 0, max_food: maxFood });
 
@@ -175,9 +183,11 @@ export default {
     }
 
     if (url.pathname === "/api/shop") {
-      const row = await env.DB.prepare("SELECT food_capacity_level, hero1_level, hero2_level, gems FROM users WHERE id = ?").bind(userId).first();
+      const row = await env.DB.prepare("SELECT food_capacity_level, production_level, hero1_level, hero2_level, gems FROM users WHERE id = ?").bind(userId).first();
       const level = row.food_capacity_level;
+      const prodLevel = row.production_level || 0;
       const isMax = level >= FOOD_MAX_LEVEL;
+      const prodIsMax = prodLevel >= PRODUCTION_MAX_LEVEL;
 
       const donRows = await env.DB.prepare("SELECT villain_id, amount, unlocked FROM villain_donations WHERE user_id = ?").bind(userId).all();
       const donMap = {};
@@ -191,13 +201,22 @@ export default {
       }));
 
       return json({
-        upgrades: [{
-          id: "food_capacity", level,
-          price: isMax ? 0 : FOOD_PRICES[level],
-          current: getMaxFood(level),
-          next: isMax ? getMaxFood(level) : getMaxFood(level + 1),
-          max_level: FOOD_MAX_LEVEL,
-        }],
+        upgrades: [
+          {
+            id: "food_capacity", level,
+            price: isMax ? 0 : FOOD_PRICES[level],
+            current: getMaxFood(level),
+            next: isMax ? getMaxFood(level) : getMaxFood(level + 1),
+            max_level: FOOD_MAX_LEVEL,
+          },
+          {
+            id: "production", level: prodLevel,
+            price: prodIsMax ? 0 : PRODUCTION_PRICES[prodLevel],
+            current: getFoodRegen(prodLevel),
+            next: prodIsMax ? getFoodRegen(prodLevel) : getFoodRegen(prodLevel + 1),
+            max_level: PRODUCTION_MAX_LEVEL,
+          },
+        ],
         heroes: [
           { 
             id: 1, 
@@ -224,7 +243,7 @@ export default {
       const type = body.type;
       const id = body.id;
 
-      if (type === "food") {
+      if (type === "food_capacity") {
         const row = await env.DB.prepare("SELECT score, food_capacity_level FROM users WHERE id = ?").bind(userId).first();
         if (row.food_capacity_level >= FOOD_MAX_LEVEL) return json({ error: "max level" }, 400);
         const price = FOOD_PRICES[row.food_capacity_level];
@@ -232,6 +251,16 @@ export default {
         await env.DB.prepare("UPDATE users SET score = score - ?, food_capacity_level = food_capacity_level + 1 WHERE id = ?").bind(price, userId).run();
         const updated = await env.DB.prepare("SELECT score, food_capacity_level FROM users WHERE id = ?").bind(userId).first();
         return json({ ok: true, score: updated.score, max_food: getMaxFood(updated.food_capacity_level) });
+      }
+
+      if (type === "production") {
+        const row = await env.DB.prepare("SELECT score, production_level FROM users WHERE id = ?").bind(userId).first();
+        if ((row.production_level || 0) >= PRODUCTION_MAX_LEVEL) return json({ error: "max level" }, 400);
+        const price = PRODUCTION_PRICES[row.production_level || 0];
+        if (row.score < price) return json({ error: "not enough score" }, 400);
+        await env.DB.prepare("UPDATE users SET score = score - ?, production_level = production_level + 1 WHERE id = ?").bind(price, userId).run();
+        const updated = await env.DB.prepare("SELECT score, production_level FROM users WHERE id = ?").bind(userId).first();
+        return json({ ok: true, score: updated.score, food_regen: getFoodRegen(updated.production_level) });
       }
 
       if (type === "hero") {
