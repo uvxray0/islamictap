@@ -191,13 +191,8 @@ async function init() {
     return;
   }
 
-  try {
-    await processReferral();
-  } catch (e) {}
-
-  try {
-    await loadLeaderboard();
-  } catch (e) {}
+  try { await processReferral(); } catch (e) {}
+  try { await loadLeaderboard(); } catch (e) {}
 }
 
 document.addEventListener("DOMContentLoaded", init);
