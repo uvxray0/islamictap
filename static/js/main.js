@@ -163,6 +163,27 @@ function showAutoClickerWarning() {
   toast._timer = setTimeout(() => toast.classList.remove("show"), 3500);
 }
 
+async function processReferral() {
+  let startParam = tg?.initDataUnsafe?.start_param;
+
+  if (!startParam) {
+    const urlParams = new URLSearchParams(window.location.search);
+    startParam = urlParams.get("tgWebAppStartParam");
+  }
+
+  if (!startParam || !startParam.startsWith("ref_")) return;
+  if (localStorage.getItem("referral_processed")) return;
+
+  const referrerId = Number(startParam.replace("ref_", ""));
+  const userId = tg.initDataUnsafe.user.id;
+  if (!referrerId || referrerId === userId) return;
+
+  try {
+    const data = await apiReferral(referrerId);
+    if (data.ok) localStorage.setItem("referral_processed", "1");
+  } catch (e) {}
+}
+
 async function loadState() {
   const data = await apiMe();
   window.state.score = data.score;
@@ -213,7 +234,7 @@ async function init() {
 
   const userId = tg.initDataUnsafe.user.id;
   const refLinkEl = document.getElementById("ref-link");
-  refLinkEl.value = `https://t.me/islamictapbot/app?startapp=ref_${userId}`;
+  refLinkEl.value = `https://t.me/islamictapbot/invite?startapp=ref_${userId}`;
 
   document.getElementById("ref-copy").addEventListener("click", () => {
     refLinkEl.select();
