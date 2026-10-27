@@ -159,6 +159,8 @@ function showAutoClickerWarning() {
   const overlay = document.getElementById("autoclicker-overlay");
   const textEl = document.getElementById("autoclicker-text");
 
+  if (!overlay || !textEl) return;
+
   textEl.textContent = message;
   overlay.classList.add("show");
 
@@ -207,9 +209,12 @@ async function init() {
     tipsOverlay.classList.remove("show");
   });
 
-  document.getElementById("autoclicker-ok").addEventListener("click", () => {
-    document.getElementById("autoclicker-overlay").classList.remove("show");
-  });
+  const autoclickerOk = document.getElementById("autoclicker-ok");
+  if (autoclickerOk) {
+    autoclickerOk.addEventListener("click", () => {
+      document.getElementById("autoclicker-overlay").classList.remove("show");
+    });
+  }
 
   document.getElementById("lang-switch").addEventListener("click", () => {
     setLang(getLang() === "fa" ? "en" : "fa");

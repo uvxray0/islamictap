@@ -9,6 +9,7 @@ const translations = {
     hero1: "قهرمان ۱", hero2: "قهرمان ۲", gems: "الماس", referrals: "دعوت‌ها", your_link: "لینک دعوت شما", copy: "کپی", copied: "کپی شد!",
     unlock: "قفل‌گشایی", donate: "اهدا", donate_to: "اهدا به", balance: "موجودی", cancel: "لغو", confirm: "تأیید", donate_amount: "مقدار اهدا",
     referral_reward_info: "هر دعوت = ۱۵ الماس", invited_users: "کاربران دعوت‌شده", no_referrals: "هنوز کسی رو دعوت نکردی",
+    reward_tiers: "🎁 پاداش دعوت",
     autoclicker_title: "توجه!", autoclicker_ok: "باشه",
   },
   en: {
@@ -21,6 +22,7 @@ const translations = {
     hero1: "Hero 1", hero2: "Hero 2", gems: "Gems", referrals: "Referrals", your_link: "Your invite link", copy: "Copy", copied: "Copied!",
     unlock: "Unlock", donate: "Donate", donate_to: "Donate to", balance: "Balance", cancel: "Cancel", confirm: "Confirm", donate_amount: "Donation amount",
     referral_reward_info: "Each invite = 15 gems", invited_users: "Invited Users", no_referrals: "No invites yet",
+    reward_tiers: "🎁 Invite Rewards",
     autoclicker_title: "Attention!", autoclicker_ok: "OK",
   },
 };

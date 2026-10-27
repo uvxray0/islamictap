@@ -28,6 +28,15 @@ async function loadReferrals() {
   window.state.gems = data.gems;
   updateGemsUI();
 
+  document.querySelectorAll(".referral-tier").forEach((el) => {
+    const tierCount = Number(el.getAttribute("data-tier"));
+    if (data.referral_count >= tierCount) {
+      el.classList.add("active");
+    } else {
+      el.classList.remove("active");
+    }
+  });
+
   const listEl = document.getElementById("referral-list");
   const lang = getLang();
   listEl.innerHTML = "";
