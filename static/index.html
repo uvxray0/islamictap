@@ -37,6 +37,15 @@
     </div>
   </div>
 
+  <div class="autoclicker-overlay" id="autoclicker-overlay">
+    <div class="autoclicker-modal">
+      <div class="autoclicker-icon">⚠️</div>
+      <h2 data-i18n="autoclicker_title">توجه!</h2>
+      <p id="autoclicker-text">auto clicker رو خاموش کن!</p>
+      <button class="autoclicker-ok" id="autoclicker-ok" data-i18n="autoclicker_ok">باشه</button>
+    </div>
+  </div>
+
   <header class="topbar">
     <div class="user-badge">
       <span class="user-avatar" id="user-avatar">?</span>
@@ -115,12 +124,19 @@
           <span class="referral-stat-value" id="ref-gems">0</span>
         </div>
       </div>
+      <div class="referral-info">
+        <p data-i18n="referral_reward_info">هر دعوت = ۱۵ الماس</p>
+      </div>
       <div class="referral-link-section">
         <div class="referral-link-label" data-i18n="your_link">لینک دعوت شما</div>
         <div class="referral-link-box">
           <input type="text" id="ref-link" readonly />
           <button id="ref-copy" data-i18n="copy">کپی</button>
         </div>
+      </div>
+      <div class="referral-list-section">
+        <div class="referral-list-label" data-i18n="invited_users">کاربران دعوت‌شده</div>
+        <div class="referral-list" id="referral-list"></div>
       </div>
     </div>
   </div>

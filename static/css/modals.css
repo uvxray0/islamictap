@@ -148,3 +148,66 @@
 .donate-confirm:active {
   background: var(--brown-deep);
 }
+
+.autoclicker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 400;
+}
+
+.autoclicker-overlay.show {
+  display: flex;
+}
+
+.autoclicker-modal {
+  background: #2a1f16;
+  border: 1px solid var(--error);
+  border-radius: 20px;
+  padding: 24px;
+  max-width: 320px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.autoclicker-icon {
+  font-size: 40px;
+}
+
+.autoclicker-modal h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--error);
+}
+
+.autoclicker-modal p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.autoclicker-ok {
+  margin-top: 6px;
+  background: var(--brown);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 40px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+}
+
+.autoclicker-ok:active {
+  background: var(--brown-deep);
+}

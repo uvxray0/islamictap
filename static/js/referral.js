@@ -1,6 +1,13 @@
+const REFERRAL_GEMS = 15;
+
 async function processReferral() {
-  const tg = window.Telegram?.WebApp;
-  const startParam = tg?.initDataUnsafe?.start_param;
+  let startParam = tg?.initDataUnsafe?.start_param;
+
+  if (!startParam) {
+    const urlParams = new URLSearchParams(window.location.search);
+    startParam = urlParams.get("tgWebAppStartParam");
+  }
+
   if (!startParam || !startParam.startsWith("ref_")) return;
   if (localStorage.getItem("referral_processed")) return;
 
@@ -20,4 +27,33 @@ async function loadReferrals() {
   document.getElementById("ref-gems").textContent = data.gems;
   window.state.gems = data.gems;
   updateGemsUI();
+
+  const listEl = document.getElementById("referral-list");
+  const lang = getLang();
+  listEl.innerHTML = "";
+
+  if (!data.list || data.list.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "referral-empty";
+    empty.textContent = translations[lang].no_referrals;
+    listEl.appendChild(empty);
+    return;
+  }
+
+  data.list.forEach((ref) => {
+    const item = document.createElement("div");
+    item.className = "referral-item";
+
+    const name = document.createElement("div");
+    name.className = "referral-item-name";
+    name.textContent = ref.username ? "@" + ref.username : translations[lang].no_username;
+
+    const gems = document.createElement("div");
+    gems.className = "referral-item-gems";
+    gems.textContent = `💎 ${REFERRAL_GEMS}`;
+
+    item.appendChild(name);
+    item.appendChild(gems);
+    listEl.appendChild(item);
+  });
 }

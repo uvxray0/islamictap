@@ -8,6 +8,8 @@ const translations = {
     toast_no_gems: "الماس کافی نیست", toast_donated: "اهدا شد!", toast_invalid_amount: "مقدار نامعتبر", toast_not_unlocked: "ابتدا قفل‌گشایی کنید",
     hero1: "قهرمان ۱", hero2: "قهرمان ۲", gems: "الماس", referrals: "دعوت‌ها", your_link: "لینک دعوت شما", copy: "کپی", copied: "کپی شد!",
     unlock: "قفل‌گشایی", donate: "اهدا", donate_to: "اهدا به", balance: "موجودی", cancel: "لغو", confirm: "تأیید", donate_amount: "مقدار اهدا",
+    referral_reward_info: "هر دعوت = ۱۵ الماس", invited_users: "کاربران دعوت‌شده", no_referrals: "هنوز کسی رو دعوت نکردی",
+    autoclicker_title: "توجه!", autoclicker_ok: "باشه",
   },
   en: {
     tips_title: "Attention!", tips_text: "This project is temporary, contains no real currency, is under development and testing, and has no stability guarantee. Thanks for testing it!",
@@ -18,6 +20,8 @@ const translations = {
     toast_no_gems: "Not enough gems", toast_donated: "Donated!", toast_invalid_amount: "Invalid amount", toast_not_unlocked: "Unlock first",
     hero1: "Hero 1", hero2: "Hero 2", gems: "Gems", referrals: "Referrals", your_link: "Your invite link", copy: "Copy", copied: "Copied!",
     unlock: "Unlock", donate: "Donate", donate_to: "Donate to", balance: "Balance", cancel: "Cancel", confirm: "Confirm", donate_amount: "Donation amount",
+    referral_reward_info: "Each invite = 15 gems", invited_users: "Invited Users", no_referrals: "No invites yet",
+    autoclicker_title: "Attention!", autoclicker_ok: "OK",
   },
 };
 

@@ -156,32 +156,13 @@ function showAutoClickerWarning() {
   const index = (autoClickerWarnings - 1) % messages.length;
   const message = messages[index];
 
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.className = "toast error show";
-  clearTimeout(toast._timer);
-  toast._timer = setTimeout(() => toast.classList.remove("show"), 3500);
-}
+  const overlay = document.getElementById("autoclicker-overlay");
+  const textEl = document.getElementById("autoclicker-text");
 
-async function processReferral() {
-  let startParam = tg?.initDataUnsafe?.start_param;
+  textEl.textContent = message;
+  overlay.classList.add("show");
 
-  if (!startParam) {
-    const urlParams = new URLSearchParams(window.location.search);
-    startParam = urlParams.get("tgWebAppStartParam");
-  }
-
-  if (!startParam || !startParam.startsWith("ref_")) return;
-  if (localStorage.getItem("referral_processed")) return;
-
-  const referrerId = Number(startParam.replace("ref_", ""));
-  const userId = tg.initDataUnsafe.user.id;
-  if (!referrerId || referrerId === userId) return;
-
-  try {
-    const data = await apiReferral(referrerId);
-    if (data.ok) localStorage.setItem("referral_processed", "1");
-  } catch (e) {}
+  autoClickerCooldown = 20;
 }
 
 async function loadState() {
@@ -224,6 +205,10 @@ async function init() {
   document.getElementById("tips-ok").addEventListener("click", () => {
     localStorage.setItem("tips_seen", "1");
     tipsOverlay.classList.remove("show");
+  });
+
+  document.getElementById("autoclicker-ok").addEventListener("click", () => {
+    document.getElementById("autoclicker-overlay").classList.remove("show");
   });
 
   document.getElementById("lang-switch").addEventListener("click", () => {
