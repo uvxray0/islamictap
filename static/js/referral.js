@@ -1,4 +1,11 @@
 const REFERRAL_GEMS = 15;
+const REFERRAL_TIERS = [
+  { count: 1, total: 15 },
+  { count: 3, total: 65 },
+  { count: 5, total: 120 },
+  { count: 10, total: 220 },
+  { count: 25, total: 495 },
+];
 
 async function processReferral() {
   let startParam = tg?.initDataUnsafe?.start_param;
@@ -21,21 +28,42 @@ async function processReferral() {
   } catch (e) {}
 }
 
+function renderTiers(currentCount) {
+  const lang = getLang();
+  const membersText = translations[lang].members;
+  const container = document.getElementById("referral-tiers-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  REFERRAL_TIERS.forEach((tier) => {
+    const el = document.createElement("div");
+    el.className = "referral-tier";
+    if (currentCount >= tier.count) el.classList.add("active");
+
+    const countEl = document.createElement("span");
+    countEl.className = "referral-tier-count";
+    countEl.textContent = `${tier.count} ${membersText}`;
+
+    const rewardEl = document.createElement("span");
+    rewardEl.className = "referral-tier-reward";
+    rewardEl.textContent = `💎 ${tier.total}`;
+
+    el.appendChild(countEl);
+    el.appendChild(rewardEl);
+    container.appendChild(el);
+  });
+}
+
 async function loadReferrals() {
   const data = await apiReferrals();
   document.getElementById("ref-count").textContent = data.referral_count;
   document.getElementById("ref-gems").textContent = data.gems;
   window.state.gems = data.gems;
+  window.state.referralCount = data.referral_count;
   updateGemsUI();
 
-  document.querySelectorAll(".referral-tier").forEach((el) => {
-    const tierCount = Number(el.getAttribute("data-tier"));
-    if (data.referral_count >= tierCount) {
-      el.classList.add("active");
-    } else {
-      el.classList.remove("active");
-    }
-  });
+  renderTiers(data.referral_count);
 
   const listEl = document.getElementById("referral-list");
   const lang = getLang();

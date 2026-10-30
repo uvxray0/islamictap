@@ -10,8 +10,6 @@ const MAX_TAPS_PER_SECOND = 10;
 
 const recentTaps = [];
 const TAP_HISTORY_SIZE = 20;
-const POSITION_THRESHOLD = 5;
-const TIME_VARIANCE_THRESHOLD = 5;
 
 let autoClickerWarnings = 0;
 let autoClickerCooldown = 0;
@@ -79,17 +77,35 @@ function regenFood() {
   }
 }
 
+function isAutoClicker(taps) {
+  if (taps.length < 5) return false;
+
+  const totalTime = taps[taps.length - 1].t - taps[0].t;
+  const avgInterval = totalTime / (taps.length - 1);
+
+  if (avgInterval < 100) return true;
+
+  return false;
+}
+
 function canTap(x, y) {
   if (autoClickerCooldown > 0) {
     autoClickerCooldown--;
     return false;
   }
 
-  if (tapCount >= MAX_TAPS_PER_SECOND) return false;
-
   const now = Date.now();
   recentTaps.push({ x, y, t: now });
   if (recentTaps.length > TAP_HISTORY_SIZE) recentTaps.shift();
+
+  if (recentTaps.length >= 5 && isAutoClicker(recentTaps)) {
+    showAutoClickerWarning();
+    autoClickerCooldown = 20;
+    recentTaps.length = 0;
+    return false;
+  }
+
+  if (tapCount >= MAX_TAPS_PER_SECOND) return false;
 
   tapCount++;
   if (!tapResetTimer) {
@@ -99,40 +115,7 @@ function canTap(x, y) {
     }, 1000);
   }
 
-  if (recentTaps.length >= 5 && isAutoClicker(recentTaps)) {
-    showAutoClickerWarning();
-    autoClickerCooldown = 20;
-    return false;
-  }
-
   return true;
-}
-
-function isAutoClicker(taps) {
-  let samePositionCount = 0;
-  for (let i = 1; i < taps.length; i++) {
-    const dx = Math.abs(taps[i].x - taps[i - 1].x);
-    const dy = Math.abs(taps[i].y - taps[i - 1].y);
-    if (dx < POSITION_THRESHOLD && dy < POSITION_THRESHOLD) {
-      samePositionCount++;
-    }
-  }
-
-  const positionRatio = samePositionCount / (taps.length - 1);
-  if (positionRatio < 0.9) return false;
-
-  const intervals = [];
-  for (let i = 1; i < taps.length; i++) {
-    intervals.push(taps[i].t - taps[i - 1].t);
-  }
-
-  const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
-  const variance = intervals.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / intervals.length;
-  const stdDev = Math.sqrt(variance);
-
-  if (stdDev < TIME_VARIANCE_THRESHOLD) return true;
-
-  return false;
 }
 
 function showAutoClickerWarning() {
@@ -159,12 +142,13 @@ function showAutoClickerWarning() {
   const overlay = document.getElementById("autoclicker-overlay");
   const textEl = document.getElementById("autoclicker-text");
 
-  if (!overlay || !textEl) return;
+  if (!overlay || !textEl) {
+    console.error("AutoClicker modal elements not found");
+    return;
+  }
 
   textEl.textContent = message;
   overlay.classList.add("show");
-
-  autoClickerCooldown = 20;
 }
 
 async function loadState() {

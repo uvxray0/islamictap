@@ -18,6 +18,7 @@ const HERO2_PRICES = [5, 15, 35];
 const HERO2_POWER = [1, 2, 4];
 
 const REFERRAL_GEMS = 15;
+const REFERRAL_MILESTONES = { 3: 5, 5: 10, 10: 25, 25: 50 };
 
 const VILLAIN_PRICES = {
   villain_1: 30000,
@@ -324,16 +325,20 @@ export default {
       const existing = await env.DB.prepare("SELECT referred_by FROM users WHERE id = ?").bind(userId).first();
       if (existing.referred_by) return json({ error: "already referred" }, 400);
 
-      const referrer = await env.DB.prepare("SELECT id FROM users WHERE id = ?").bind(referrerId).first();
+      const referrer = await env.DB.prepare("SELECT id, referral_count FROM users WHERE id = ?").bind(referrerId).first();
       if (!referrer) return json({ error: "referrer not found" }, 404);
 
+      const newCount = (referrer.referral_count || 0) + 1;
+      const bonus = REFERRAL_MILESTONES[newCount] || 0;
+      const totalGems = REFERRAL_GEMS + bonus;
+
       await env.DB.batch([
-        env.DB.prepare("INSERT INTO referrals (referrer_id, referred_id, gems_awarded) VALUES (?, ?, ?)").bind(referrerId, userId, REFERRAL_GEMS),
-        env.DB.prepare("UPDATE users SET gems = gems + ?, referral_count = referral_count + 1 WHERE id = ?").bind(REFERRAL_GEMS, referrerId),
+        env.DB.prepare("INSERT INTO referrals (referrer_id, referred_id, gems_awarded) VALUES (?, ?, ?)").bind(referrerId, userId, totalGems),
+        env.DB.prepare("UPDATE users SET gems = gems + ?, referral_count = referral_count + 1 WHERE id = ?").bind(totalGems, referrerId),
         env.DB.prepare("UPDATE users SET referred_by = ? WHERE id = ?").bind(referrerId, userId),
       ]);
 
-      return json({ ok: true, gems_awarded: REFERRAL_GEMS });
+      return json({ ok: true, gems_awarded: totalGems });
     }
 
     if (url.pathname === "/api/referrals") {

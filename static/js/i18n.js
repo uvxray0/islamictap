@@ -2,14 +2,13 @@ const translations = {
   fa: {
     tips_title: "توجه!", tips_text: "این پروژه موقتی است، حاوی هیچ ارز واقعی نیست، در مرحله توسعه و تست است، و پایداری لازم را ندارد. ممنون که در آزمایش آن هستید!",
     tips_ok: "باشه", score_label: "RIDAN", tab_home: "خانه", tab_shop: "فروشگاه", tab_stats: "آمار", tab_referral: "دعوت",
-    leaderboard_title: "🏆 برترین‌ها", members: "عضو", shop_title: "🛒 فروشگاه", shop_upgrades_title: "⬆️ ارتقاها", shop_heroes_title: "🦸 قهرمان‌ها", shop_chars_title: "👹 شخصیت ها",
+    leaderboard_title: "🏆 برترین‌ها", members: "نفر", shop_title: "🛒 فروشگاه", shop_upgrades_title: "⬆️ ارتقاها", shop_heroes_title: "🦸 قهرمان‌ها", shop_chars_title: "👹 شخصیت ها",
     no_username: "بدون نام", food_storage: "انبار غذا", production_speed: "سرعت تولید", buy: "خرید", max_level: "حداکثر",
     toast_no_score: "موجودی کافی نیست", toast_max_level: "به حداکثر سطح رسیدی", toast_buy_success: "خرید موفق!", toast_coming_soon: "به‌زودی!",
     toast_no_gems: "الماس کافی نیست", toast_donated: "اهدا شد!", toast_invalid_amount: "مقدار نامعتبر", toast_not_unlocked: "ابتدا قفل‌گشایی کنید",
     hero1: "قهرمان ۱", hero2: "قهرمان ۲", gems: "الماس", referrals: "دعوت‌ها", your_link: "لینک دعوت شما", copy: "کپی", copied: "کپی شد!",
     unlock: "قفل‌گشایی", donate: "اهدا", donate_to: "اهدا به", balance: "موجودی", cancel: "لغو", confirm: "تأیید", donate_amount: "مقدار اهدا",
-    referral_reward_info: "هر دعوت = ۱۵ الماس", invited_users: "کاربران دعوت‌شده", no_referrals: "هنوز کسی رو دعوت نکردی",
-    reward_tiers: "🎁 پاداش دعوت",
+    reward_tiers: "🎁 پاداش دعوت", invited_users: "کاربران دعوت‌شده", no_referrals: "هنوز کسی رو دعوت نکردی",
     autoclicker_title: "توجه!", autoclicker_ok: "باشه",
   },
   en: {
@@ -21,8 +20,7 @@ const translations = {
     toast_no_gems: "Not enough gems", toast_donated: "Donated!", toast_invalid_amount: "Invalid amount", toast_not_unlocked: "Unlock first",
     hero1: "Hero 1", hero2: "Hero 2", gems: "Gems", referrals: "Referrals", your_link: "Your invite link", copy: "Copy", copied: "Copied!",
     unlock: "Unlock", donate: "Donate", donate_to: "Donate to", balance: "Balance", cancel: "Cancel", confirm: "Confirm", donate_amount: "Donation amount",
-    referral_reward_info: "Each invite = 15 gems", invited_users: "Invited Users", no_referrals: "No invites yet",
-    reward_tiers: "🎁 Invite Rewards",
+    reward_tiers: "🎁 Invite Rewards", invited_users: "Invited Users", no_referrals: "No invites yet",
     autoclicker_title: "Attention!", autoclicker_ok: "OK",
   },
 };
@@ -47,6 +45,10 @@ function setLang(lang) {
   });
 
   document.getElementById("lang-switch").textContent = lang === "fa" ? "EN" : "فا";
+
+  if (window.state.referralCount !== undefined) {
+    renderTiers(window.state.referralCount);
+  }
 
   if (window.state.currentVillain) {
     const v = window.state.currentVillain;
