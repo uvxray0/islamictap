@@ -75,7 +75,7 @@ function openDonateModal(villain) {
   document.getElementById("donate-title").textContent =
     `${translations[lang].donate_to} ${lang === "fa" ? villain.name : villain.nameEn}`;
   document.getElementById("donate-balance").textContent =
-    `${translations[lang].balance}: ${window.state.score.toLocaleString()}`;
+    `${translations[lang].balance}: ${ltr(window.state.score.toLocaleString("en-US"))}`;
   document.getElementById("donate-input").value = "";
   document.getElementById("donate-input").max = window.state.score;
   document.getElementById("donate-overlay").classList.add("show");

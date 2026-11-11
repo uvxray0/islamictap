@@ -29,6 +29,10 @@ function getLang() {
   return localStorage.getItem("lang") || "fa";
 }
 
+function ltr(value) {
+  return `\u2066${value}\u2069`;
+}
+
 function setLang(lang) {
   localStorage.setItem("lang", lang);
   document.documentElement.lang = lang;
@@ -55,6 +59,6 @@ function setLang(lang) {
     const titleEl = document.getElementById("donate-title");
     const balanceEl = document.getElementById("donate-balance");
     titleEl.textContent = `${translations[lang].donate_to} ${lang === "fa" ? v.name : v.nameEn}`;
-    balanceEl.textContent = `${translations[lang].balance}: ${window.state.score.toLocaleString()}`;
+    balanceEl.textContent = `${translations[lang].balance}: ${ltr(window.state.score.toLocaleString("en-US"))}`;
   }
 }

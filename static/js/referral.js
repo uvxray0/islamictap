@@ -84,6 +84,7 @@ async function loadReferrals() {
     const name = document.createElement("div");
     name.className = "referral-item-name";
     name.textContent = ref.username ? "@" + ref.username : translations[lang].no_username;
+    if (ref.username) name.dir = "ltr";
 
     const gems = document.createElement("div");
     gems.className = "referral-item-gems";

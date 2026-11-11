@@ -55,7 +55,7 @@ function renderLeaderboard(data) {
   const header = document.querySelector(".stats-header h2");
 
   if (header) {
-    header.innerHTML = `${translations[lang].leaderboard_title} <span class="total-members">${(data.total_users || 0).toLocaleString()} ${translations[lang].members}</span>`;
+    header.innerHTML = `${translations[lang].leaderboard_title} <span class="total-members"><span class="formula">${(data.total_users || 0).toLocaleString("en-US")}</span> ${translations[lang].members}</span>`;
   }
 
   list.innerHTML = "";
@@ -71,10 +71,11 @@ function renderLeaderboard(data) {
     const name = document.createElement("div");
     name.className = "stats-name";
     name.textContent = user.username ? "@" + user.username : translations[lang].no_username;
+    if (user.username) name.dir = "ltr";
 
     const donated = document.createElement("div");
     donated.className = "stats-score";
-    donated.textContent = `💩 ${(user.donated || 0).toLocaleString()}`;
+    donated.textContent = `💩 ${(user.donated || 0).toLocaleString("en-US")}`;
 
     row.appendChild(rank);
     row.appendChild(name);
@@ -105,8 +106,8 @@ function renderUpgrades(upgrades) {
     const title = document.createElement("div");
     title.className = "shop-card-title";
     title.textContent = isProduction
-      ? `${translations[lang].production_speed} (Lv ${up.level})`
-      : `${translations[lang].food_storage} (Lv ${up.level})`;
+      ? `${translations[lang].production_speed} ${ltr(`(Lv ${up.level})`)}`
+      : `${translations[lang].food_storage} ${ltr(`(Lv ${up.level})`)}`;
     info.appendChild(title);
 
     if (!isMax) {
@@ -124,7 +125,7 @@ function renderUpgrades(upgrades) {
       btn.textContent = translations[lang].max_level;
       btn.disabled = true;
     } else {
-      btn.textContent = `${translations[lang].buy} ${up.price}`;
+      btn.textContent = `${translations[lang].buy} ${ltr(up.price)}`;
       btn.addEventListener("click", () => buy(up.id, null));
     }
 
@@ -158,7 +159,7 @@ function renderHeroes(heroes) {
 
     const title = document.createElement("div");
     title.className = "shop-card-title";
-    title.textContent = `${h.id === 1 ? translations[lang].hero1 : translations[lang].hero2} (Lv ${h.level})`;
+    title.textContent = `${h.id === 1 ? translations[lang].hero1 : translations[lang].hero2} ${ltr(`(Lv ${h.level})`)}`;
 
     const desc = document.createElement("div");
     desc.className = "shop-card-desc";
@@ -173,7 +174,7 @@ function renderHeroes(heroes) {
       btn.textContent = translations[lang].max_level;
       btn.disabled = true;
     } else {
-      btn.textContent = `💎 ${h.price}`;
+      btn.textContent = ltr(`💎 ${h.price}`);
       btn.addEventListener("click", () => buy("hero", h.id));
     }
 
@@ -211,7 +212,7 @@ function renderVillains(villains) {
     if (!data.unlocked) {
       const btn = document.createElement("button");
       btn.className = "char-card-btn";
-      btn.textContent = `${translations[lang].unlock} ${(data.price || v.price).toLocaleString()}`;
+      btn.textContent = `${translations[lang].unlock} ${ltr((data.price || v.price).toLocaleString("en-US"))}`;
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
         unlockVillain(v.id);
@@ -220,7 +221,7 @@ function renderVillains(villains) {
     } else {
       const info = document.createElement("div");
       info.className = "char-card-info";
-      info.textContent = `💩 ${data.amount.toLocaleString()}`;
+      info.textContent = `💩 ${data.amount.toLocaleString("en-US")}`;
       card.appendChild(info);
 
       const btn = document.createElement("button");

@@ -147,6 +147,7 @@
 .shop-card-desc {
   font-size: 11px;
   color: var(--text-dim);
+  text-align: match-parent;
 }
 
 .shop-card-btn {

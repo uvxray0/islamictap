@@ -36,3 +36,19 @@ body {
   flex-direction: column;
   padding: env(safe-area-inset-top) 0 0;
 }
+
+/* Digits, arrows and Latin tokens stay in logical order inside Persian RTL. */
+.speed-badge,
+.gems-badge,
+.food-text,
+.score-value,
+.shop-card-desc,
+.char-card-info,
+.stats-score,
+.referral-tier-reward,
+.referral-item-gems,
+.referral-link-box input,
+.formula {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
