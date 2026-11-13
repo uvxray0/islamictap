@@ -1,10 +1,10 @@
-const REFERRAL_GEMS = 15;
+const REFERRAL_GEMS = 5;
 const REFERRAL_TIERS = [
-  { count: 1, total: 15 },
-  { count: 3, total: 65 },
-  { count: 5, total: 120 },
-  { count: 10, total: 220 },
-  { count: 25, total: 495 },
+  { count: 1, total: 5 },
+  { count: 3, total: 20 },
+  { count: 5, total: 35 },
+  { count: 10, total: 70 },
+  { count: 25, total: 190 },
 ];
 
 async function processReferral() {

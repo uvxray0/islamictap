@@ -17,8 +17,8 @@ const HERO1_POWER = [2, 5, 10];
 const HERO2_PRICES = [5, 15, 35];
 const HERO2_POWER = [1, 2, 4];
 
-const REFERRAL_GEMS = 15;
-const REFERRAL_MILESTONES = { 3: 5, 5: 10, 10: 25, 25: 50 };
+const REFERRAL_GEMS = 5;
+const REFERRAL_MILESTONES = { 3: 5, 5: 5, 10: 10, 25: 45 };
 
 const VILLAIN_PRICES = {
   villain_1: 30000,
