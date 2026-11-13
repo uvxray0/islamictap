@@ -16,12 +16,12 @@ function updateSpeedUI() {
 
   const foodRegenVal = foodRegen || 2;
   const heroPowerVal = window.state.heroPower || 0;
+  const tapSize = window.state.tapSize || 1;
 
-  if (heroPowerVal > 0) {
-    el.textContent = `🍔 ${foodRegenVal}/s | ⚡ ${heroPowerVal}/s`;
-  } else {
-    el.textContent = `🍔 ${foodRegenVal}/s`;
-  }
+  const parts = [`🍔 ${foodRegenVal}/s`];
+  if (tapSize > 1) parts.push(`🕳️ ×${tapSize}`);
+  if (heroPowerVal > 0) parts.push(`⚡ ${heroPowerVal}/s`);
+  el.textContent = parts.join(" | ");
 
   el.style.display = "inline-block";
 }
@@ -38,10 +38,10 @@ function showToast(message, type) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 2500);
 }
 
-function spawnFloat(x, y) {
+function spawnFloat(x, y, amount) {
   const el = document.createElement("div");
   el.className = "float-text";
-  el.textContent = "+1";
+  el.textContent = `+${amount || 1}`;
   el.style.left = `${x}px`;
   el.style.top = `${y}px`;
   document.body.appendChild(el);
@@ -91,31 +91,37 @@ function renderUpgrades(upgrades) {
 
   upgrades.forEach((up) => {
     const isMax = up.level >= up.max_level;
-    const isProduction = up.id === "production";
+    const iconChar = up.id === "production" ? "⚡" : up.id === "drain" ? "🕳️" : "🍔";
+    const titleName = up.id === "production"
+      ? translations[lang].production_speed
+      : up.id === "drain"
+        ? translations[lang].drain_speed
+        : translations[lang].food_storage;
+    const changeText = up.id === "production"
+      ? `${up.current}/s → ${up.next}/s`
+      : up.id === "drain"
+        ? `×${up.current} → ×${up.next}`
+        : `${up.current} → ${up.next}`;
 
     const card = document.createElement("div");
     card.className = "shop-card";
 
     const icon = document.createElement("div");
     icon.className = "shop-card-icon";
-    icon.textContent = isProduction ? "⚡" : "🍔";
+    icon.textContent = iconChar;
 
     const info = document.createElement("div");
     info.className = "shop-card-info";
 
     const title = document.createElement("div");
     title.className = "shop-card-title";
-    title.textContent = isProduction
-      ? `${translations[lang].production_speed} ${ltr(`(Lv ${up.level})`)}`
-      : `${translations[lang].food_storage} ${ltr(`(Lv ${up.level})`)}`;
+    title.textContent = `${titleName} ${ltr(`(Lv ${up.level})`)}`;
     info.appendChild(title);
 
     if (!isMax) {
       const desc = document.createElement("div");
       desc.className = "shop-card-desc";
-      desc.textContent = isProduction
-        ? `${up.current}/s → ${up.next}/s`
-        : `${up.current} → ${up.next}`;
+      desc.textContent = changeText;
       info.appendChild(desc);
     }
 

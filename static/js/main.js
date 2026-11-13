@@ -158,6 +158,7 @@ async function loadState() {
   window.state.maxFood = data.max_food;
   window.state.gems = data.gems;
   window.state.heroPower = data.hero_power || 0;
+  window.state.tapSize = data.tap_size || 1;
   foodRegen = data.food_regen || 2;
 
   document.getElementById("score").textContent = window.state.score;
@@ -226,13 +227,14 @@ async function init() {
   const coinEl = document.getElementById("coin");
   coinEl.addEventListener("click", (e) => {
     if (!canTap(e.clientX, e.clientY)) return;
-    if (window.state.food < 1) return;
-    window.state.food -= 1;
-    window.state.score += 1;
+    const tapSize = window.state.tapSize || 1;
+    if (window.state.food < tapSize) return;
+    window.state.food -= tapSize;
+    window.state.score += tapSize;
     document.getElementById("score").textContent = window.state.score;
-    window.state.pendingTaps += 1;
+    window.state.pendingTaps += tapSize;
     updateFoodUI();
-    spawnFloat(e.clientX, e.clientY);
+    spawnFloat(e.clientX, e.clientY, tapSize);
     if (navigator.vibrate) navigator.vibrate(8);
     startThrottle();
     scheduleDebounce();

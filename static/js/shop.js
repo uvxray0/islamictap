@@ -44,6 +44,9 @@ async function buy(type, id) {
   if (data.food_regen !== undefined) {
     foodRegen = data.food_regen;
   }
+  if (data.tap_size !== undefined) {
+    window.state.tapSize = data.tap_size;
+  }
 
   updateSpeedUI();
 

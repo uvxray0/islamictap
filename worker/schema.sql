@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS users (
   food INTEGER NOT NULL DEFAULT 500,
   last_regen INTEGER NOT NULL DEFAULT (unixepoch()),
   food_capacity_level INTEGER NOT NULL DEFAULT 0,
+  production_level INTEGER NOT NULL DEFAULT 0,
+  drain_level INTEGER NOT NULL DEFAULT 0,
   gems INTEGER NOT NULL DEFAULT 0,
   referral_count INTEGER NOT NULL DEFAULT 0,
   referred_by INTEGER DEFAULT NULL,

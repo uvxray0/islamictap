@@ -5,6 +5,7 @@ window.state = {
   maxFood: 500,
   gems: 0,
   heroPower: 0,
+  tapSize: 1,
   heroTickTimer: null,
   pendingTaps: 0,
   sending: false,

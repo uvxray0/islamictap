@@ -12,6 +12,10 @@ const PRODUCTION_SPEEDS = [2, 3, 4, 6, 8, 12];
 const PRODUCTION_PRICES = [2500, 5000, 10000, 20000, 40000];
 const PRODUCTION_MAX_LEVEL = 5;
 
+const TAP_SIZES = [1, 2, 3, 4, 6, 8];
+const DRAIN_PRICES = [2000, 4000, 8000, 16000, 32000];
+const DRAIN_MAX_LEVEL = 5;
+
 const HERO1_PRICES = [15, 40, 80];
 const HERO1_POWER = [2, 5, 10];
 const HERO2_PRICES = [5, 15, 35];
@@ -38,6 +42,10 @@ function getMaxFood(level) {
 
 function getFoodRegen(level) {
   return PRODUCTION_SPEEDS[Math.min(level, PRODUCTION_MAX_LEVEL)];
+}
+
+function getTapSize(level) {
+  return TAP_SIZES[Math.min(level || 0, DRAIN_MAX_LEVEL)];
 }
 
 function getHeroPower(level, powerArray) {
@@ -88,10 +96,25 @@ function getTotalPower(hero1_level, hero2_level) {
   return power;
 }
 
+let drainColumnReady = null;
+function ensureDrainColumn(env) {
+  if (!drainColumnReady) {
+    drainColumnReady = (async () => {
+      const info = await env.DB.prepare("PRAGMA table_info(users)").all();
+      const has = (info.results || []).some((col) => col.name === "drain_level");
+      if (!has) {
+        await env.DB.prepare("ALTER TABLE users ADD COLUMN drain_level INTEGER NOT NULL DEFAULT 0").run();
+      }
+    })();
+  }
+  return drainColumnReady;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
+    await ensureDrainColumn(env);
 
     if (url.pathname === "/api/auth" && request.method === "POST") {
       const body = await request.json().catch(() => ({}));
@@ -144,14 +167,14 @@ export default {
 
     if (url.pathname === "/api/me") {
       const row = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
-      if (!row) return json({ id: userId, score: 0, food: 500, max_food: 500, gems: 0, hero_power: 0, food_regen: 2 });
+      if (!row) return json({ id: userId, score: 0, food: 500, max_food: 500, gems: 0, hero_power: 0, food_regen: 2, tap_size: 1 });
 
       const maxFood = getMaxFood(row.food_capacity_level);
       const foodRegen = getFoodRegen(row.production_level || 0);
       const { food } = calcFood(row.food, row.last_regen, maxFood, foodRegen);
       const heroPower = getTotalPower(row.hero1_level, row.hero2_level);
 
-      return json({ ...row, food, max_food: maxFood, hero_power: heroPower, food_regen: foodRegen });
+      return json({ ...row, food, max_food: maxFood, hero_power: heroPower, food_regen: foodRegen, tap_size: getTapSize(row.drain_level) });
     }
 
     if (url.pathname === "/api/tap" && request.method === "POST") {
@@ -184,11 +207,13 @@ export default {
     }
 
     if (url.pathname === "/api/shop") {
-      const row = await env.DB.prepare("SELECT food_capacity_level, production_level, hero1_level, hero2_level, gems FROM users WHERE id = ?").bind(userId).first();
+      const row = await env.DB.prepare("SELECT food_capacity_level, production_level, drain_level, hero1_level, hero2_level, gems FROM users WHERE id = ?").bind(userId).first();
       const level = row.food_capacity_level;
       const prodLevel = row.production_level || 0;
+      const drainLevel = row.drain_level || 0;
       const isMax = level >= FOOD_MAX_LEVEL;
       const prodIsMax = prodLevel >= PRODUCTION_MAX_LEVEL;
+      const drainIsMax = drainLevel >= DRAIN_MAX_LEVEL;
 
       const donRows = await env.DB.prepare("SELECT villain_id, amount, unlocked FROM villain_donations WHERE user_id = ?").bind(userId).all();
       const donMap = {};
@@ -216,6 +241,13 @@ export default {
             current: getFoodRegen(prodLevel),
             next: prodIsMax ? getFoodRegen(prodLevel) : getFoodRegen(prodLevel + 1),
             max_level: PRODUCTION_MAX_LEVEL,
+          },
+          {
+            id: "drain", level: drainLevel,
+            price: drainIsMax ? 0 : DRAIN_PRICES[drainLevel],
+            current: getTapSize(drainLevel),
+            next: drainIsMax ? getTapSize(drainLevel) : getTapSize(drainLevel + 1),
+            max_level: DRAIN_MAX_LEVEL,
           },
         ],
         heroes: [
@@ -262,6 +294,17 @@ export default {
         await env.DB.prepare("UPDATE users SET score = score - ?, production_level = production_level + 1 WHERE id = ?").bind(price, userId).run();
         const updated = await env.DB.prepare("SELECT score, production_level FROM users WHERE id = ?").bind(userId).first();
         return json({ ok: true, score: updated.score, food_regen: getFoodRegen(updated.production_level) });
+      }
+
+      if (type === "drain") {
+        const row = await env.DB.prepare("SELECT score, drain_level FROM users WHERE id = ?").bind(userId).first();
+        const level = row.drain_level || 0;
+        if (level >= DRAIN_MAX_LEVEL) return json({ error: "max level" }, 400);
+        const price = DRAIN_PRICES[level];
+        if (row.score < price) return json({ error: "not enough score" }, 400);
+        await env.DB.prepare("UPDATE users SET score = score - ?, drain_level = drain_level + 1 WHERE id = ?").bind(price, userId).run();
+        const updated = await env.DB.prepare("SELECT score, drain_level FROM users WHERE id = ?").bind(userId).first();
+        return json({ ok: true, score: updated.score, tap_size: getTapSize(updated.drain_level) });
       }
 
       if (type === "hero") {
